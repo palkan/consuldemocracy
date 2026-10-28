@@ -1,0 +1,28 @@
+# An editor to work with credentials
+vim
+# Claude
+bubblewrap
+socat
+# Native extensions (Gemfile.lock has only the `ruby` platform, so gems compile from source)
+cmake
+pkg-config
+libssl-dev
+libffi-dev
+libyaml-dev
+zlib1g-dev
+# Utilities
+unzip
+# Image processing (mini_magick, image_processing)
+imagemagick
+# exiftool_vendored (Perl script)
+perl
+# wkhtmltopdf-binary runtime libraries (wicked_pdf)
+libxrender1
+libxext6
+libfontconfig1
+libjpeg62-turbo
+fonts-liberation
+# System tests (headless Chrome via Selenium)
+chromium
+chromium-driver
+libxss1

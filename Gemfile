@@ -100,10 +100,10 @@ group :development do
   gem "faraday-retry", "~> 2.4.0", require: false
   gem "htmlbeautifier", "~> 1.4.3", require: false
   gem "mdl", "~> 0.18.1", require: false
-  gem "pronto", "~> 0.11.5", require: false
-  gem "pronto-erb_lint", "~> 0.1.6", require: false
-  gem "pronto-rubocop", "~> 0.11.6", require: false
-  gem "pronto-stylelint", "~> 0.11.1", require: false
+  # gem "pronto", "~> 0.11.5", require: false
+  # gem "pronto-erb_lint", "~> 0.1.6", require: false
+  # gem "pronto-rubocop", "~> 0.11.6", require: false
+  # gem "pronto-stylelint", "~> 0.11.1", require: false
   gem "rubocop", "~> 1.91.0", require: false
   gem "rubocop-capybara", "~> 3.0.0", require: false
   gem "rubocop-factory_bot", "~> 2.28.0", require: false

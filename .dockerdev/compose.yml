@@ -1,0 +1,92 @@
+x-app: &app
+  build:
+    context: .
+    args:
+      RUBY_VERSION: '3.4.11'
+      PG_MAJOR: '14'
+      NODE_MAJOR: '22'
+  image: consul-dev:1.0.0
+  working_dir: ${PWD}
+  environment: &env
+    NODE_ENV: ${NODE_ENV:-development}
+    RAILS_ENV: ${RAILS_ENV:-}
+  tmpfs:
+    - /tmp:exec # exec is needed for some CLIs (e.g., tailwindcss)
+    - ${PWD}/tmp/pids
+
+x-backend: &backend
+  <<: *app
+  stdin_open: true
+  tty: true
+  # Headless Chromium (system tests) needs more than the default 64MB of /dev/shm
+  shm_size: 1gb
+  volumes:
+    - ${PWD}:/${PWD}:cached
+    - bundle:/usr/local/bundle
+    - rails_cache:/${PWD}/tmp/cache
+    - assets:/${PWD}/public/assets
+    - node_modules:/${PWD}/node_modules
+    - history:/usr/local/hist
+    # Claude state (sessions, settings.json, todos, project data) — named volume.
+    - claude:/root/.claude
+    # Claude CLI binaries (~/.local/bin/claude -> ~/.local/share/claude/versions/X).
+    # Seeded from the image on first run; `dip claude:update` writes here, so
+    # updates survive container restarts without rebuilding the image.
+    # NOTE: once created, the volume wins over the image; rebuilding the image doesn't update the CLI.
+    - claude_cli:/root/.local
+    # Claude main config (auth tokens, project list)
+    - ./.claude.json:/root/.claude.json
+    - ./.psqlrc:/root/.psqlrc:ro
+    - ./.bashrc:/root/.bashrc:ro
+  environment: &backend_environment
+    <<: *env
+    DATABASE_URL: postgresql://postgres:postgres@postgres:5432
+    MALLOC_ARENA_MAX: 2
+    WEB_CONCURRENCY: ${WEB_CONCURRENCY:-1}
+    BOOTSNAP_CACHE_DIR: /usr/local/bundle/_bootsnap
+    XDG_DATA_HOME: /${PWD}/tmp/cache
+    HISTFILE: /usr/local/hist/.bash_history
+    PSQL_HISTFILE: /usr/local/hist/.psql_history
+    IRB_HISTFILE: /usr/local/hist/.irb_history
+    EDITOR: vi
+    CLAUDE_CODE_TMPDIR: /root/.claude/__tmp__
+  depends_on:
+    postgres:
+      condition: service_healthy
+
+services:
+  rails:
+    <<: *backend
+    command: bundle exec rails
+
+  web:
+    <<: *backend
+    command: bundle exec rails server -b 0.0.0.0
+    ports:
+      - '3000:3000'
+
+  postgres:
+    image: postgres:14
+    volumes:
+      - .psqlrc:/root/.psqlrc:ro
+      - postgres:/var/lib/postgresql/data
+      - history:/usr/local/hist
+    environment:
+      PSQL_HISTFILE: /usr/local/hist/.psql_history
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - 5432
+    healthcheck:
+      test: pg_isready -U postgres -h 127.0.0.1
+      interval: 5s
+
+volumes:
+  bundle:
+  node_modules:
+  history:
+  rails_cache:
+  postgres:
+  assets:
+  claude:
+  claude_cli:
+

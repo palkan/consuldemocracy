@@ -1,0 +1,111 @@
+version: '7.1'
+
+# Define default environment variables to pass
+# to Docker Compose
+# environment:
+#  RAILS_ENV: development
+
+compose:
+  files:
+    - .dockerdev/compose.yml
+  project_name: consul
+
+interaction:
+  # This command spins up a Rails container with the required dependencies (such as databases),
+  # and opens a terminal within it.
+  runner:
+    description: Open a Bash shell within a Rails container (with dependencies up)
+    service: rails
+    command: /bin/bash
+
+  # Run a Rails container without any dependent services (useful for non-Rails scripts)
+  bash:
+    description: Run an arbitrary script within a container (or open a shell without deps)
+    service: rails
+    command: /bin/bash
+    compose_run_options: [ no-deps ]
+
+  # A shortcut to run Bundler commands
+  bundle:
+    description: Run Bundler commands
+    service: rails
+    command: bundle
+    compose_run_options: [ no-deps ]
+
+  rails:
+    description: Run Rails commands
+    service: rails
+    command: bundle exec rails
+    subcommands:
+      s:
+        description: Run Rails server at http://localhost:3000
+        service: web
+        compose:
+          run_options: [ service-ports, use-aliases ]
+
+  rspec:
+    description: Run RSpec tests (including system tests in headless Chromium)
+    service: rails
+    command: bundle exec rspec
+    environment:
+      RAILS_ENV: test
+
+  rubocop:
+    description: Run RuboCop
+    service: rails
+    command: bundle exec rubocop
+    compose_run_options: [ no-deps ]
+
+  npm:
+    description: Run npm commands
+    service: rails
+    command: npm
+    compose_run_options: [ no-deps ]
+
+  npx:
+    description: Run npx commands
+    service: rails
+    command: npx
+    compose_run_options: [ no-deps ]
+
+  lint:
+    description: Run all linters (same as the CI linters workflow)
+    service: rails
+    command: |
+      bash -c 'set -e
+        bundle exec rubocop --fail-level convention --display-only-fail-level-offenses
+        bundle exec erb_lint .
+        npx eslint . --quiet
+        npx stylelint app/assets/stylesheets
+        bundle exec mdl *.md docs/
+        find app/ -name "*.html.erb" -exec bundle exec htmlbeautifier --lint-only --keep-blank-lines 1 -e {} +'
+    compose_run_options: [ no-deps ]
+
+  psql:
+    description: Run Postgres psql console
+    service: postgres
+    default_args: consul_development
+    command: psql -h postgres -U postgres
+
+  claude:
+    description: Run Claude CLI
+    service: rails
+    command: claude --dangerously-skip-permissions
+  'claude:update':
+    description: Update Claude Code CLI (persisted in the claude_cli volume)
+    service: rails
+    command: claude update
+    compose_run_options: [ no-deps ]
+
+provision:
+  - '[[ "$RESET_DOCKER" == "true" ]] && echo "Re-creating the Docker env from scratch..." && dip compose down --volumes || echo "Re-provisioning the Docker env..."'
+  - (test -f .dockerdev/.claude.json) || (cp .dockerdev/.claude.json.example .dockerdev/.claude.json)
+  - (test -f config/database.yml) || (cp config/database.yml.example config/database.yml)
+  - (test -f config/secrets.yml) || (cp config/secrets.yml.example config/secrets.yml)
+  - dip compose up -d postgres
+  - dip bundle check || dip bundle install
+  - dip npm clean-install
+  - dip rails db:prepare
+  - dip rails db:test:prepare
+  - echo "🚀 Ready to rock! Run 'dip rails s' to start a Rails web server or 'dip rspec' to run tests."
+
