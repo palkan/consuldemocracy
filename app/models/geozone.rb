@@ -1,3 +1,4 @@
+# typed: strict
 class Geozone < ApplicationRecord
   include Graphqlable
 
@@ -12,25 +13,29 @@ class Geozone < ApplicationRecord
 
   scope :public_for_api, -> { all }
 
+  sig { returns(T::Array[T.nilable(String)]) }
   def self.names
     Geozone.pluck(:name)
   end
 
+  sig { returns(T::Boolean) }
   def safe_to_destroy?
     Geozone.reflect_on_all_associations(:has_many).all? do |association|
       association.klass.where(geozone: self).empty?
     end
   end
 
+  sig { returns(T.nilable(String)) }
   def outline_points
     normalized_geojson&.to_json
   end
 
   private
 
+    sig { returns(T.nilable(T::Hash[T.untyped, T.untyped])) }
     def normalized_geojson
       if geojson.present?
-        parsed_geojson = JSON.parse(geojson)
+        parsed_geojson = JSON.parse(T.must(geojson))
 
         if parsed_geojson["type"] == "FeatureCollection"
           parsed_geojson["features"].each do |feature|
@@ -54,6 +59,7 @@ class Geozone < ApplicationRecord
       end
     end
 
+    sig { params(geometry: T.untyped).returns(T::Hash[Symbol, T.untyped]) }
     def wrap_in_feature(geometry)
       {
         type: "Feature",
@@ -62,6 +68,7 @@ class Geozone < ApplicationRecord
       }
     end
 
+    sig { params(feature: T::Hash[T.untyped, T.untyped]).returns(T::Hash[Symbol, T.untyped]) }
     def wrap_in_feature_collection(feature)
       {
         type: "FeatureCollection",

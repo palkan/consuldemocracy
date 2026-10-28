@@ -1,3 +1,4 @@
+# typed: strict
 class SDG::Review < ApplicationRecord
   validates :relatable_id, uniqueness: { scope: [:relatable_type] }
 

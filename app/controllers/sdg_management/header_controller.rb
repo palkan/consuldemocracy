@@ -1,3 +1,4 @@
+# typed: true
 class SDGManagement::HeaderController < SDGManagement::BaseController
   include Admin::Widget::CardsActions
 
@@ -12,18 +13,22 @@ class SDGManagement::HeaderController < SDGManagement::BaseController
 
   private
 
+    sig { void }
     def load_cardable
       @cardable = WebSection.find_by!(name: "sdg")
     end
 
+    sig { override.returns(String) }
     def index_path
       sdg_management_homepage_path
     end
 
+    sig { returns(String) }
     def form_path
       sdg_management_homepage_header_path
     end
 
+    sig { returns(ActionController::Parameters) }
     def header_params
       card_params
     end

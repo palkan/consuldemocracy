@@ -1,7 +1,10 @@
+# typed: strict
 module Abilities
   class Administrator
+    extend T::Sig
     include CanCan::Ability
 
+    sig { params(user: User).void }
     def initialize(user)
       merge Abilities::Moderation.new(user)
       merge Abilities::SDG::Manager.new(user)

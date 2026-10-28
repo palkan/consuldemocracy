@@ -1,3 +1,4 @@
+# typed: true
 class Admin::SiteCustomization::CardsController < Admin::SiteCustomization::BaseController
   include Admin::Widget::CardsActions
 
@@ -5,10 +6,13 @@ class Admin::SiteCustomization::CardsController < Admin::SiteCustomization::Base
   load_and_authorize_resource :card, through: :page, class: "Widget::Card"
   helper_method :index_path
 
+  sig { void }
   def index
   end
 
   private
+
+    sig { override.returns(String) }
 
     def index_path
       admin_site_customization_page_widget_cards_path(@page)

@@ -1,3 +1,4 @@
+# typed: strict
 class Banner < ApplicationRecord
   acts_as_paranoid column: :hidden_at
   include ActsAsParanoidAliases

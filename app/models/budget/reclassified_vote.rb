@@ -1,3 +1,4 @@
+# typed: strict
 class Budget
   class ReclassifiedVote < ApplicationRecord
     REASONS = %w[heading_changed unfeasible].freeze

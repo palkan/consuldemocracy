@@ -1,3 +1,4 @@
+# typed: strict
 class Legislation::DraftVersion < ApplicationRecord
   VALID_STATUSES = %w[draft published].freeze
 
@@ -21,22 +22,27 @@ class Legislation::DraftVersion < ApplicationRecord
 
   scope :published, -> { where(status: "published").order(id: :desc) }
 
+  sig { returns(T.nilable(String)) }
   def body_html
     MarkdownConverter.new(body, with_toc_data: true).render
   end
 
+  sig { returns(String) }
   def toc_html
     MarkdownConverter.new(body).render_toc
   end
 
+  sig { returns(T.nilable(String)) }
   def display_title
     status == "draft" ? "#{title} *" : title
   end
 
+  sig { returns(Integer) }
   def total_comments
-    annotations.sum(:comments_count)
+    T.cast(annotations.sum(:comments_count), Integer)
   end
 
+  sig { returns(Comment::PrivateRelation) }
   def best_comments
     Comment.where(commentable: annotations, ancestry: nil).sort_by_supports.limit(10)
   end

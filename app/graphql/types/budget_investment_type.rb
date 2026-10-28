@@ -1,3 +1,4 @@
+# typed: strict
 module Types
   class BudgetInvestmentType < Types::BaseObject
     field :id, ID, null: false

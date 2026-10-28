@@ -1,9 +1,11 @@
+# typed: true
 module Budgets
   class ExecutionsController < ApplicationController
     before_action :load_budget
 
     authorize_resource :budget
 
+    sig { void }
     def show
       authorize! :read_executions, @budget
       @statuses = Milestone::Status.all
@@ -12,6 +14,7 @@ module Budgets
 
     private
 
+      sig { returns(T::Hash[T.nilable(Budget::Heading), T::Array[Budget::Investment]]) }
       def investments_by_heading
         base = @budget.investments.winners
         base = base.joins(milestones: :translations).includes(:milestones)
@@ -25,12 +28,14 @@ module Budgets
         end
       end
 
+      sig { void }
       def load_budget
         @budget = Budget.find_by_slug_or_id params[:budget_id]
       end
 
+      sig { returns(T::Array[[T.nilable(Budget::Heading), T::Array[Budget::Investment]]]) }
       def investments_by_heading_ordered_alphabetically
-        investments_by_heading.sort { |a, b| a[0].name <=> b[0].name }
+        investments_by_heading.sort { |a, b| T.must(a[0]).name <=> T.must(b[0]).name }
       end
   end
 end

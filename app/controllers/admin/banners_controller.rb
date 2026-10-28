@@ -1,3 +1,4 @@
+# typed: true
 class Admin::BannersController < Admin::BaseController
   include Translatable
 
@@ -7,10 +8,12 @@ class Admin::BannersController < Admin::BaseController
 
   load_and_authorize_resource
 
+  sig { void }
   def index
     @banners = Banner.send(@current_filter).page(params[:page])
   end
 
+  sig { void }
   def create
     @banner = Banner.new(banner_params)
     if @banner.save
@@ -20,6 +23,7 @@ class Admin::BannersController < Admin::BaseController
     end
   end
 
+  sig { void }
   def update
     if @banner.update(banner_params)
       redirect_to admin_banners_path, notice: t("admin.banners.update.notice")
@@ -28,6 +32,7 @@ class Admin::BannersController < Admin::BaseController
     end
   end
 
+  sig { void }
   def destroy
     @banner.destroy!
     redirect_to admin_banners_path, notice: t("admin.banners.destroy.notice")
@@ -35,10 +40,12 @@ class Admin::BannersController < Admin::BaseController
 
   private
 
+    sig { returns(ActionController::Parameters) }
     def banner_params
       params.require(:banner).permit(allowed_params)
     end
 
+    sig { returns(T::Array[T.any(Symbol, T::Hash[Symbol, T.untyped])]) }
     def allowed_params
       [:target_url, :post_started_at, :post_ended_at, :background_color, :font_color,
        translation_params(Banner),

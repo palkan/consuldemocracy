@@ -1,4 +1,6 @@
+# typed: strict
 class Admin::Settings::FeaturesTabComponent < ApplicationComponent
+  sig { returns(T::Array[String]) }
   def settings
     %w[
       feature.featured_proposals

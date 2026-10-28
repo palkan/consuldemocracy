@@ -1,19 +1,25 @@
+# typed: strict
 class Admin::Geozones::IndexComponent < ApplicationComponent
   include Header
 
+  sig { returns(T.any(Geozone::PrivateRelation, T::Array[Geozone])) }
   attr_reader :geozones
+
   delegate :render_map, to: :helpers
 
+  sig { params(geozones: T.any(Geozone::PrivateRelation, T::Array[Geozone])).void }
   def initialize(geozones)
     @geozones = geozones
   end
 
   private
 
+    sig { override.returns(String) }
     def title
       t("admin.geozones.index.title")
     end
 
+    sig { params(condition: T.untyped).returns(String) }
     def yes_no_text(condition)
       if condition
         t("shared.yes")
@@ -22,6 +28,7 @@ class Admin::Geozones::IndexComponent < ApplicationComponent
       end
     end
 
+    sig { returns(T::Array[T::Hash[Symbol, T.untyped]]) }
     def geozones_data
       geozones.map do |geozone|
         {

@@ -1,3 +1,4 @@
+# typed: strict
 class SDGManagement::BaseController < ApplicationController
   include FeatureFlags
 
@@ -12,6 +13,7 @@ class SDGManagement::BaseController < ApplicationController
 
   private
 
+    sig { void }
     def verify_sdg_manager
       raise CanCan::AccessDenied unless current_user&.sdg_manager? || current_user&.administrator?
     end

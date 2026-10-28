@@ -1,3 +1,4 @@
+# typed: strict
 class AdminNotification < ApplicationRecord
   include Notifiable
 
@@ -12,22 +13,27 @@ class AdminNotification < ApplicationRecord
 
   before_validation :complete_link_url
 
+  sig { returns(User::PrivateRelation) }
   def list_of_recipients
     UserSegments.recipients(segment_recipient)
   end
 
+  sig { returns(T::Boolean) }
   def valid_segment_recipient?
     UserSegments.valid_segment?(segment_recipient)
   end
 
+  sig { returns(T::Boolean) }
   def draft?
     sent_at.nil?
   end
 
+  sig { returns(Integer) }
   def list_of_recipients_count
     list_of_recipients.count
   end
 
+  sig { void }
   def deliver
     list_of_recipients.each { |user| Notification.add(user, self) }
     update!(sent_at: Time.current, recipients_count: list_of_recipients.count)
@@ -35,10 +41,12 @@ class AdminNotification < ApplicationRecord
 
   private
 
+    sig { void }
     def validate_segment_recipient
       errors.add(:segment_recipient, :invalid) unless valid_segment_recipient?
     end
 
+    sig { void }
     def complete_link_url
       return if link.blank?
 

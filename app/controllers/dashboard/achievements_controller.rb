@@ -1,6 +1,8 @@
+# typed: true
 class Dashboard::AchievementsController < Dashboard::BaseController
   include Dashboard::ExpectsDateRange
 
+  sig { void }
   def index
     authorize! :dashboard, proposal
     render json: processed_groups
@@ -8,6 +10,7 @@ class Dashboard::AchievementsController < Dashboard::BaseController
 
   private
 
+    sig { returns(T::Hash[T.any(String, Date), T.untyped]) }
     def processed_groups
       grouped_results = groups
       grouped_results.each do |key, results|
@@ -20,20 +23,22 @@ class Dashboard::AchievementsController < Dashboard::BaseController
       grouped_results
     end
 
+    sig { returns(T::Hash[T.any(String, Date), T.untyped]) }
     def groups
       if params[:group_by] == "week"
         executed_proposed_actions.group_by do |v|
-          "#{v.executed_at.to_date.cweek}/#{v.executed_at.to_date.year}"
+          "#{T.must(v.executed_at).to_date.cweek}/#{T.must(v.executed_at).to_date.year}"
         end
       elsif params[:group_by] == "month"
         executed_proposed_actions.group_by do |v|
-          "#{v.executed_at.to_date.year}-#{v.executed_at.to_date.month}"
+          "#{T.must(v.executed_at).to_date.year}-#{T.must(v.executed_at).to_date.month}"
         end
       else
-        executed_proposed_actions.group_by { |a| a.executed_at.to_date }
+        executed_proposed_actions.group_by { |a| T.must(a.executed_at).to_date }
       end
     end
 
+    sig { returns(Dashboard::ExecutedAction::PrivateRelation) }
     def executed_proposed_actions
       @executed_proposed_actions ||=
         Dashboard::ExecutedAction

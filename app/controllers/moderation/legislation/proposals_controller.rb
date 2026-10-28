@@ -1,3 +1,4 @@
+# typed: strict
 class Moderation::Legislation::ProposalsController < Moderation::BaseController
   include ModerateActions
   include FeatureFlags
@@ -13,10 +14,12 @@ class Moderation::Legislation::ProposalsController < Moderation::BaseController
 
   private
 
+    sig { override.returns(T.class_of(Legislation::Proposal)) }
     def resource_model
       Legislation::Proposal
     end
 
+    sig { returns(String) }
     def resource_name
       "proposal"
     end

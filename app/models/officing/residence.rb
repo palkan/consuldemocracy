@@ -1,10 +1,22 @@
+# typed: strict
 class Officing::Residence
+  extend T::Sig
   include ActiveModel::Model
   include ActiveModel::Attributes
   include ActiveModel::Validations::Callbacks
 
   attribute :date_of_birth, :date
-  attr_accessor :user, :officer, :document_number, :document_type, :year_of_birth, :postal_code
+  sig { returns(T.nilable(User)) }
+  attr_accessor :user
+
+  sig { returns(T.nilable(Poll::Officer)) }
+  attr_accessor :officer
+
+  sig { returns(T.nilable(String)) }
+  attr_accessor :document_number, :document_type, :postal_code
+
+  sig { returns(T.nilable(T.any(String, Integer))) }
+  attr_accessor :year_of_birth
 
   before_validation :retrieve_census_data
 
@@ -17,16 +29,19 @@ class Officing::Residence
   validate :allowed_age
   validate :local_residence
 
+  sig { params(attrs: T.untyped).void }
   def initialize(attrs = {})
     super
+    @census_api_response = T.let(@census_api_response, T.untyped)
     clean_document_number
   end
 
+  sig { returns(T.any(T::Boolean, User)) }
   def save
     return false unless valid?
 
     if user_exists?
-      self.user = find_user_by_document
+      user = self.user = T.must(find_user_by_document)
       user.update!(verified_at: Time.current)
     else
       user_params = {
@@ -39,10 +54,12 @@ class Officing::Residence
     end
   end
 
+  sig { returns(T.nilable(T.any(T::Boolean, User))) }
   def save!
     validate! && save
   end
 
+  sig { returns(FailedCensusCall) }
   def store_failed_census_call
     FailedCensusCall.create(
       user: user,
@@ -55,14 +72,17 @@ class Officing::Residence
     )
   end
 
+  sig { returns(T::Boolean) }
   def user_exists?
     find_user_by_document.present?
   end
 
+  sig { returns(T.nilable(User)) }
   def find_user_by_document
     User.find_by(document_number: document_number, document_type: document_type)
   end
 
+  sig { void }
   def local_residence
     return if errors.any?
 
@@ -72,6 +92,7 @@ class Officing::Residence
     end
   end
 
+  sig { void }
   def allowed_age
     return if errors[:year_of_birth].any?
     return unless @census_api_response.valid?
@@ -81,16 +102,19 @@ class Officing::Residence
     end
   end
 
+  sig { returns(T::Boolean) }
   def allowed_age?
-    Age.in_years(response_date_of_birth) >= User.minimum_required_age
+    T.must(Age.in_years(response_date_of_birth)) >= User.minimum_required_age
   end
 
+  sig { returns(T.untyped) }
   def response_date_of_birth
     @census_api_response.date_of_birth
   end
 
   private
 
+    sig { void }
     def retrieve_census_data
       @census_api_response = CensusCaller.new.call(document_type,
                                                    document_number,
@@ -98,17 +122,21 @@ class Officing::Residence
                                                    postal_code)
     end
 
+    sig { returns(T.nilable(T::Boolean)) }
     def residency_valid?
       @census_api_response.valid? && valid_year_of_birth?
     end
 
+    sig { returns(T::Boolean) }
     def valid_year_of_birth?
       return true if Setting.force_presence_date_of_birth?
 
       @census_api_response.date_of_birth.year.to_s == year_of_birth.to_s
     end
 
+    sig { void }
     def clean_document_number
+      document_number = self.document_number
       self.document_number = document_number.gsub(/[^a-z0-9]+/i, "").upcase if document_number.present?
     end
 end

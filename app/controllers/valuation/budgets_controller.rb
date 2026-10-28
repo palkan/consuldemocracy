@@ -1,3 +1,4 @@
+# typed: true
 class Valuation::BudgetsController < Valuation::BaseController
   include FeatureFlags
 
@@ -5,6 +6,7 @@ class Valuation::BudgetsController < Valuation::BaseController
 
   load_and_authorize_resource
 
+  sig { void }
   def index
     @budgets = @budgets.published.order(created_at: :desc)
   end

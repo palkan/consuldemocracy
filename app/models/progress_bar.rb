@@ -1,6 +1,7 @@
+# typed: strict
 class ProgressBar < ApplicationRecord
   self.inheritance_column = nil
-  RANGE = (0..100)
+  RANGE = T.let(0..100, T::Range[Integer])
 
   enum :kind, { primary: 0, secondary: 1 }
 

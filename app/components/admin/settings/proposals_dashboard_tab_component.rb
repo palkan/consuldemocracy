@@ -1,4 +1,6 @@
+# typed: strict
 class Admin::Settings::ProposalsDashboardTabComponent < ApplicationComponent
+  sig { returns(T::Array[String]) }
   def settings
     %w[
       proposals.successful_proposal_id

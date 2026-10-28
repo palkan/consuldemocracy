@@ -1,6 +1,8 @@
+# typed: true
 class Admin::Poll::RecountsController < Admin::Poll::BaseController
   before_action :load_poll
 
+  sig { void }
   def index
     @stats = Poll::Stats.new(@poll)
 
@@ -12,6 +14,7 @@ class Admin::Poll::RecountsController < Admin::Poll::BaseController
 
   private
 
+    sig { void }
     def load_poll
       @poll = ::Poll.find(params[:poll_id])
     end

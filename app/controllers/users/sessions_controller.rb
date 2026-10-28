@@ -1,4 +1,6 @@
+# typed: true
 class Users::SessionsController < Devise::SessionsController
+  sig { void }
   def destroy
     @stored_location = stored_location_for(:user)
     super
@@ -6,6 +8,7 @@ class Users::SessionsController < Devise::SessionsController
 
   private
 
+    sig { params(resource: T.untyped).returns(String) }
     def after_sign_in_path_for(resource)
       if Rails.application.multitenancy_management_mode? && !resource.administrator?
         account_path
@@ -16,10 +19,12 @@ class Users::SessionsController < Devise::SessionsController
       end
     end
 
+    sig { params(resource: T.untyped).returns(String) }
     def after_sign_out_path_for(resource)
       @stored_location.present? && !@stored_location.match("management") ? @stored_location : super
     end
 
+    sig { returns(T::Boolean) }
     def verifying_via_email?
       return false if resource.blank?
 

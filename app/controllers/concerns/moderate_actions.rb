@@ -1,8 +1,20 @@
+# typed: true
 module ModerateActions
   extend ActiveSupport::Concern
+  extend T::Helpers
+  extend T::Sig
+
+  requires_ancestor { ApplicationController }
+
+  abstract!
 
   PER_PAGE = 50
 
+  Resource = T.type_alias do
+    T.any(Comment, Debate, Proposal, Budget::Investment, Legislation::Proposal, ProposalNotification)
+  end
+
+  sig { void }
   def index
     @resources = @resources.send(@current_filter)
                            .send("sort_by_#{@current_order}")
@@ -11,6 +23,7 @@ module ModerateActions
     set_resources_instance
   end
 
+  sig { void }
   def hide
     hide_resource resource
     respond_to do |format|
@@ -20,6 +33,7 @@ module ModerateActions
     end
   end
 
+  sig { void }
   def moderate
     @resources = @resources.where(id: params[:ids])
 
@@ -37,28 +51,34 @@ module ModerateActions
 
   private
 
+    sig { void }
     def load_resources
       @resources = resource_model.accessible_by(current_ability, :moderate)
     end
 
+    sig { params(resource: Resource).void }
     def hide_resource(resource)
       resource.hide
       Activity.log(current_user, :hide, resource)
     end
 
+    sig { params(user: User).void }
     def block_user(user)
       user.block
       Activity.log(current_user, :block, user)
     end
 
+    sig { returns(Symbol) }
     def author_id
       :author_id
     end
 
+    sig { void }
     def set_resources_instance
       instance_variable_set("@#{resource_name.pluralize}", @resources)
     end
 
+    sig { returns(Resource) }
     def resource
       if resource_model.to_s == "Budget::Investment"
         @resource ||= instance_variable_get(:@investment)
@@ -69,7 +89,11 @@ module ModerateActions
       end
     end
 
+    sig { returns(String) }
     def resource_name
-      @resource_name ||= resource_model.to_s.downcase
+      @resource_name ||= T.let(resource_model.to_s.downcase, T.nilable(String))
     end
+
+    sig { abstract.returns(T.class_of(ApplicationRecord)) }
+    def resource_model; end
 end

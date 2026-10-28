@@ -1,10 +1,17 @@
+# typed: strict
 class Budgets::InvestmentsListComponent < ApplicationComponent
+  sig { returns(Budget) }
   attr_reader :budget
 
+  sig { params(budget: Budget).void }
   def initialize(budget)
     @budget = budget
   end
 
+  sig do
+    params(limit: Integer)
+      .returns(T.any(T::Array[Budget::Investment], Budget::Investment::PrivateAssociationRelation))
+  end
   def investments(limit: 9)
     case budget.phase
     when "accepting", "reviewing"
@@ -18,6 +25,7 @@ class Budgets::InvestmentsListComponent < ApplicationComponent
     end
   end
 
+  sig { returns(String) }
   def see_all_path
     if budget.single_heading?
       budget_investments_path(budget)

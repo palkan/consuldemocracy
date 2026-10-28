@@ -1,7 +1,10 @@
+# typed: strict
 module Abilities
   class Everyone
+    extend T::Sig
     include CanCan::Ability
 
+    sig { params(user: T.nilable(User)).void }
     def initialize(user)
       can [:read, :map], Debate
       can [:read, :map, :summary, :share], Proposal

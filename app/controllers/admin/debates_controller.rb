@@ -1,3 +1,4 @@
+# typed: true
 class Admin::DebatesController < Admin::BaseController
   include FeatureFlags
   include HasOrders
@@ -7,6 +8,7 @@ class Admin::DebatesController < Admin::BaseController
 
   has_orders %w[created_at]
 
+  sig { void }
   def index
     @debates = Debate.for_render
     @debates = @debates.search(@search_terms) if @search_terms.present?
@@ -21,6 +23,7 @@ class Admin::DebatesController < Admin::BaseController
     end
   end
 
+  sig { void }
   def show
     @debate = Debate.find(params[:id])
   end

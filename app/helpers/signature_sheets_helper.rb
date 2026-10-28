@@ -1,9 +1,17 @@
+# typed: strict
 module SignatureSheetsHelper
+  extend T::Sig
+  extend T::Helpers
+
+  requires_ancestor { ActionView::Base }
+
+  sig { returns(T::Array[[String, T.any(T.class_of(Proposal), T.class_of(Budget::Investment))]]) }
   def signable_options
     [[t("activerecord.models.proposal", count: 1), Proposal],
      [t("activerecord.models.budget/investment", count: 1), Budget::Investment]]
   end
 
+  sig { returns(String) }
   def required_fields_to_verify_text_help
     if Setting["feature.remote_census"].present?
       date_of_birth_and_postal_code_text_help
@@ -12,6 +20,7 @@ module SignatureSheetsHelper
     end
   end
 
+  sig { returns(String) }
   def date_of_birth_and_postal_code_text_help
     text_help = t("admin.signature_sheets.new.text_help.required_fields_note")
 
@@ -29,6 +38,7 @@ module SignatureSheetsHelper
     text_help
   end
 
+  sig { returns(String) }
   def example_text_help
     text_example = t("admin.signature_sheets.new.text_help.example_text")
     example_1 = "12345678Z"

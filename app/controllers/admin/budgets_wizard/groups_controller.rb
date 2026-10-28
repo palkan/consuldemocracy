@@ -1,8 +1,10 @@
+# typed: true
 class Admin::BudgetsWizard::GroupsController < Admin::BudgetsWizard::BaseController
   include Admin::BudgetGroupsActions
 
   before_action :load_groups, only: [:index, :create]
 
+  sig { void }
   def index
     if single_heading?
       @group = @budget.groups.first_or_initialize("name_#{I18n.locale}" => @budget.name)
@@ -13,6 +15,8 @@ class Admin::BudgetsWizard::GroupsController < Admin::BudgetsWizard::BaseControl
 
   private
 
+    sig { override.returns(String) }
+
     def groups_index
       if single_heading?
         admin_budgets_wizard_budget_group_headings_path(@budget, @group, url_params)
@@ -20,6 +24,8 @@ class Admin::BudgetsWizard::GroupsController < Admin::BudgetsWizard::BaseControl
         admin_budgets_wizard_budget_groups_path(@budget, url_params)
       end
     end
+
+    sig { override.returns(Symbol) }
 
     def new_action
       :index

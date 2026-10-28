@@ -1,3 +1,4 @@
+# typed: strict
 class Legislation::Annotation < ApplicationRecord
   COMMENTS_PAGE_SIZE = 5
   acts_as_paranoid column: :hidden_at
@@ -17,6 +18,7 @@ class Legislation::Annotation < ApplicationRecord
   before_save :store_range, :store_context
   after_create :create_first_comment
 
+  sig { void }
   def store_range
     self.range_start = ranges.first["start"]
     self.range_start_offset = ranges.first["startOffset"]
@@ -24,8 +26,9 @@ class Legislation::Annotation < ApplicationRecord
     self.range_end_offset = ranges.first["endOffset"]
   end
 
+  sig { returns(String) }
   def store_context
-    html = draft_version.body_html
+    html = T.must(draft_version).body_html
     doc = Nokogiri::HTML(html)
 
     selector_start = "/html/body/#{range_start}"
@@ -34,6 +37,7 @@ class Legislation::Annotation < ApplicationRecord
     selector_end = "/html/body/#{range_end}"
     el_end = doc.at_xpath(selector_end)
 
+    range_start_offset = T.must(self.range_start_offset)
     remainder_el_start = el_start.text[0..range_start_offset - 1] unless range_start_offset.zero?
     remainder_el_end = el_end.text[range_end_offset..-1]
 
@@ -42,19 +46,23 @@ class Legislation::Annotation < ApplicationRecord
     "<span class=annotator-hl>#{quote}</span>"
   end
 
+  sig { void }
   def create_first_comment
     comments.create(body: text, user: author)
   end
 
+  sig { returns(T.nilable(String)) }
   def title
-    text[0..50]
+    T.must(text)[0..50]
   end
 
+  sig { returns(Integer) }
   def weight
-    comments_count + comments.sum(:cached_votes_total)
+    T.must(comments_count) + T.cast(comments.sum(:cached_votes_total), Integer)
   end
 
+  sig { returns(T::Boolean) }
   def comments_closed?
-    !draft_version.process.allegations_phase.open?
+    !T.must(T.must(draft_version).process).allegations_phase.open?
   end
 end

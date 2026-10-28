@@ -1,8 +1,11 @@
+# typed: strict
 class Verification::Management::Document
+  extend T::Sig
   include ActiveModel::Model
   include ActiveModel::Attributes
 
   attribute :date_of_birth, :date
+  sig { returns(T.nilable(String)) }
   attr_accessor :document_type, :document_number, :postal_code
 
   validates :document_type, :document_number, presence: true
@@ -11,19 +14,23 @@ class Verification::Management::Document
 
   delegate :username, :email, to: :user, allow_nil: true
 
+  sig { returns(T.nilable(User)) }
   def user
-    @user = User.active.by_document(document_type, document_number).first
+    @user = T.let(User.active.by_document(document_type, document_number).first, T.nilable(User))
   end
 
+  sig { returns(T::Boolean) }
   def user?
     user.present?
   end
 
+  sig { returns(T.nilable(T::Boolean)) }
   def in_census?
     response = CensusCaller.new.call(document_type, document_number, date_of_birth, postal_code)
     response.valid? && valid_age?(response)
   end
 
+  sig { params(response: T.untyped).returns(T::Boolean) }
   def valid_age?(response)
     if under_age?(response)
       errors.add(:age, true)
@@ -33,15 +40,19 @@ class Verification::Management::Document
     end
   end
 
+  sig { params(response: T.untyped).returns(T::Boolean) }
   def under_age?(response)
-    response.date_of_birth.blank? || Age.in_years(response.date_of_birth) < User.minimum_required_age
+    response.date_of_birth.blank? || T.must(Age.in_years(response.date_of_birth)) < User.minimum_required_age
   end
 
+  sig { returns(T::Boolean) }
   def verified?
-    user? && user.level_three_verified?
+    user = self.user
+    !user.nil? && user.level_three_verified?
   end
 
+  sig { returns(T.nilable(T::Boolean)) }
   def verify
-    user.update(verified_at: Time.current) if user?
+    user&.update(verified_at: Time.current) if user?
   end
 end

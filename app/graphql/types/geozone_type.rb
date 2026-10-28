@@ -1,3 +1,4 @@
+# typed: strict
 module Types
   class GeozoneType < Types::BaseObject
     field :id, ID, null: false

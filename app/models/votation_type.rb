@@ -1,3 +1,4 @@
+# typed: strict
 class VotationType < ApplicationRecord
   belongs_to :questionable, polymorphic: true
 
@@ -13,16 +14,19 @@ class VotationType < ApplicationRecord
 
   scope :accepts_options, -> { where.not(vote_type: "open") }
 
+  sig { returns(T::Boolean) }
   def accepts_options?
     !open?
   end
 
   private
 
+    sig { returns(T::Boolean) }
     def max_votes_required?
       multiple?
     end
 
+    sig { void }
     def cannot_be_open_ended_if_question_has_options
       if questionable&.question_options&.any? && !accepts_options?
         errors.add(:vote_type, :cannot_change_to_open_ended)

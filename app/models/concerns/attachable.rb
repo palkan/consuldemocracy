@@ -1,5 +1,10 @@
+# typed: strict
 module Attachable
   extend ActiveSupport::Concern
+  extend T::Helpers
+  extend T::Sig
+
+  requires_ancestor { ApplicationRecord }
 
   included do
     has_one_attached :attachment
@@ -29,28 +34,34 @@ module Attachable
     before_validation :set_attachment_from_cached_attachment, if: -> { cached_attachment.present? }
   end
 
+  sig { returns(T.nilable(T.class_of(ApplicationRecord))) }
   def association_class
     type = send("#{association_name}_type")
 
     type.presence&.constantize
   end
 
+  sig { void }
   def set_cached_attachment_from_attachment
     self.cached_attachment = attachment.signed_id
   end
 
+  sig { void }
   def set_attachment_from_cached_attachment
     self.attachment = cached_attachment
   end
 
+  sig { returns(T.nilable(String)) }
   def attachment_file_name
     attachment.filename.to_s if attachment.attached?
   end
 
+  sig { returns(T.nilable(String)) }
   def attachment_content_type
     attachment.blob.content_type if attachment.attached?
   end
 
+  sig { returns(Integer) }
   def attachment_file_size
     if attachment.attached?
       attachment.blob.byte_size
@@ -59,6 +70,7 @@ module Attachable
     end
   end
 
+  sig { returns(String) }
   def file_path
     ActiveStorage::Blob.service.path_for(attachment.blob.key)
   end

@@ -1,3 +1,4 @@
+# typed: strict
 class LocalCensusRecord < ApplicationRecord
   normalizes :document_type, :document_number, :postal_code, with: ->(value) { value.strip }
 
@@ -10,7 +11,9 @@ class LocalCensusRecord < ApplicationRecord
 
   scope :search, ->(terms) { where("document_number ILIKE ?", "%#{terms}%") }
 
+  sig { returns(String) }
   def title
-    "#{ApplicationController.helpers.humanize_document_type(document_type)} #{document_number}"
+    helpers = T.cast(ApplicationController.helpers, UsersHelper)
+    "#{helpers.humanize_document_type(document_type)} #{document_number}"
   end
 end

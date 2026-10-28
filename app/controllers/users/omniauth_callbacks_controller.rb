@@ -1,30 +1,38 @@
+# typed: true
 class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
   skip_before_action :verify_authenticity_token, only: :saml
 
+  sig { void }
   def twitter
     sign_in_with :twitter_login, :twitter
   end
 
+  sig { void }
   def facebook
     sign_in_with :facebook_login, :facebook
   end
 
+  sig { void }
   def google_oauth2
     sign_in_with :google_login, :google_oauth2
   end
 
+  sig { void }
   def wordpress_oauth2
     sign_in_with :wordpress_login, :wordpress_oauth2
   end
 
+  sig { void }
   def saml
     sign_in_with :saml_login, :saml
   end
 
+  sig { void }
   def oidc
     sign_in_with :oidc_login, :oidc
   end
 
+  sig { params(resource: User).returns(String) }
   def after_sign_in_path_for(resource)
     if resource.registering_with_oauth
       finish_signup_path
@@ -35,6 +43,7 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
 
   private
 
+    sig { params(feature: Symbol, provider: Symbol).void }
     def sign_in_with(feature, provider)
       raise ActionController::RoutingError, "Not Found" unless Setting["feature.#{feature}"]
 
@@ -53,6 +62,7 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
       end
     end
 
+    sig { returns(T::Boolean) }
     def save_user
       @user.save || @user.save_requiring_finish_signup
     end

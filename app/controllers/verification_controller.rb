@@ -1,16 +1,19 @@
+# typed: strict
 class VerificationController < ApplicationController
   before_action :authenticate_user!
   before_action :verify_lock
 
   skip_authorization_check
 
+  sig { void }
   def show
     redirect_to next_step_path[:path], notice: next_step_path[:notice]
   end
 
   private
 
-    def next_step_path(user = current_user)
+    sig { params(user: User).returns(T::Hash[Symbol, String]) }
+    def next_step_path(user = T.must(current_user))
       if user.organization?
         { path: account_path }
       elsif user.level_three_verified?

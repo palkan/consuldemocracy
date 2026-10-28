@@ -1,3 +1,4 @@
+# typed: strict
 class SDG::LocalTarget < ApplicationRecord
   include SDG::Related
 
@@ -18,14 +19,19 @@ class SDG::LocalTarget < ApplicationRecord
 
   before_validation :set_related_goal
 
-  alias_method :long_title, :title
+  sig { returns(T.nilable(String)) }
+  def long_title
+    title
+  end
 
+  sig { params(code: String).returns(SDG::LocalTarget) }
   def self.[](code)
     find_by!(code: code)
   end
 
   private
 
+    sig { void }
     def set_related_goal
       self.goal ||= target&.goal
     end

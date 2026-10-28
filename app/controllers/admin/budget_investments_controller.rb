@@ -1,3 +1,4 @@
+# typed: true
 class Admin::BudgetInvestmentsController < Admin::BaseController
   include FeatureFlags
   include Translatable
@@ -13,6 +14,7 @@ class Admin::BudgetInvestmentsController < Admin::BaseController
   before_action :parse_valuation_filters
   before_action :load_investments, only: :index
 
+  sig { void }
   def index
     load_tags
     respond_to do |format|
@@ -24,9 +26,11 @@ class Admin::BudgetInvestmentsController < Admin::BaseController
     end
   end
 
+  sig { void }
   def show
   end
 
+  sig { void }
   def edit
     authorize! :admin_update, @investment
     load_staff
@@ -34,6 +38,7 @@ class Admin::BudgetInvestmentsController < Admin::BaseController
     load_tags
   end
 
+  sig { void }
   def update
     authorize! :admin_update, @investment
 
@@ -50,6 +55,7 @@ class Admin::BudgetInvestmentsController < Admin::BaseController
     end
   end
 
+  sig { void }
   def show_to_valuators
     authorize! :admin_update, @investment
     @investment.update!(visible_to_valuators: true)
@@ -60,6 +66,7 @@ class Admin::BudgetInvestmentsController < Admin::BaseController
     end
   end
 
+  sig { void }
   def hide_from_valuators
     authorize! :admin_update, @investment
     @investment.update!(visible_to_valuators: false)
@@ -70,6 +77,7 @@ class Admin::BudgetInvestmentsController < Admin::BaseController
     end
   end
 
+  sig { void }
   def select
     authorize! :select, @investment
     @investment.update!(selected: true)
@@ -80,6 +88,7 @@ class Admin::BudgetInvestmentsController < Admin::BaseController
     end
   end
 
+  sig { void }
   def deselect
     authorize! :deselect, @investment
     @investment.update!(selected: false)
@@ -92,16 +101,19 @@ class Admin::BudgetInvestmentsController < Admin::BaseController
 
   private
 
+    sig { void }
     def load_investments
       @investments = Budget::Investment.scoped_filter(params, @current_filter).order_filter(params)
       @investments = Kaminari.paginate_array(@investments) if @investments.is_a?(Array)
       @investments = @investments.page(params[:page]) unless request.format.csv?
     end
 
+    sig { returns(ActionController::Parameters) }
     def budget_investment_params
       params.require(:budget_investment).permit(allowed_params)
     end
 
+    sig { returns(T::Array[T.any(Symbol, T::Hash[Symbol, T.untyped])]) }
     def allowed_params
       attributes = [:external_url, :heading_id, :administrator_id, :tag_list,
                     :valuation_tag_list, :incompatible, :selected,
@@ -109,32 +121,39 @@ class Admin::BudgetInvestmentsController < Admin::BaseController
       [*attributes, translation_params(Budget::Investment)]
     end
 
+    sig { void }
     def load_budget
       @budget = Budget.find_by_slug_or_id! params[:budget_id]
     end
 
+    sig { void }
     def load_investment
       @investment = @budget.investments.find(params[:id])
     end
 
+    sig { void }
     def load_staff
       @admins = @budget.administrators.includes(:user)
       @valuators = @budget.valuators.includes(:user).order(description: :asc).order("users.email ASC")
     end
 
+    sig { void }
     def load_valuator_groups
       @valuator_groups = ValuatorGroup.order(name: :asc)
     end
 
+    sig { void }
     def load_tags
       @tags = Budget::Investment.tags_on(:valuation_tags).order(:name).distinct
     end
 
+    sig { void }
     def load_ballot
       query = Budget::Ballot.where(user: current_user, budget: @budget)
       @ballot = @budget.balloting? ? query.first_or_create! : query.first_or_initialize
     end
 
+    sig { void }
     def parse_valuation_filters
       if params[:valuator_or_group_id]
         model, id = params[:valuator_or_group_id].split("_")

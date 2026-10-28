@@ -1,4 +1,14 @@
+# typed: strict
 module LayoutsHelper
+  extend T::Sig
+  extend T::Helpers
+
+  requires_ancestor { ActionView::Base }
+
+  sig do
+    params(text: String, path: String, is_active: T::Boolean, options: T::Hash[Symbol, T.untyped])
+      .returns(ActiveSupport::SafeBuffer)
+  end
   def layout_menu_link_to(text, path, is_active, options)
     title = t("shared.go_to_page") + text
 
@@ -10,6 +20,7 @@ module LayoutsHelper
     end
   end
 
+  sig { returns(ActiveSupport::SafeBuffer) }
   def common_html_attributes
     render Layout::CommonHtmlAttributesComponent.new
   end

@@ -1,8 +1,12 @@
+# typed: strict
 class Poll::PartialResult < ApplicationRecord
   VALID_ORIGINS = %w[web booth].freeze
 
-  belongs_to :question, -> { with_hidden }, inverse_of: :partial_results
-  belongs_to :author, ->   { with_hidden }, class_name: "User", inverse_of: :poll_partial_results
+  belongs_to :question, -> { T.bind(self, Poll::Question::PrivateRelation).with_hidden },
+             inverse_of: :partial_results
+  belongs_to :author, -> { T.bind(self, User::PrivateRelation).with_hidden },
+             class_name: "User",
+             inverse_of: :poll_partial_results
   belongs_to :booth_assignment
   belongs_to :officer_assignment
   belongs_to :option, class_name: "Poll::Question::Option"
@@ -17,11 +21,13 @@ class Poll::PartialResult < ApplicationRecord
 
   before_save :update_logs
 
+  sig { void }
   def update_logs
     if will_save_change_to_amount? && amount_in_database.present?
-      self.amount_log += ":#{amount_in_database}"
-      self.officer_assignment_id_log += ":#{officer_assignment_id_in_database}"
-      self.author_id_log += ":#{author_id_in_database}"
+      self.amount_log = T.must(amount_log) + ":#{amount_in_database}"
+      self.officer_assignment_id_log = T.must(officer_assignment_id_log) +
+                                       ":#{officer_assignment_id_in_database}"
+      self.author_id_log = T.must(author_id_log) + ":#{author_id_in_database}"
     end
   end
 end

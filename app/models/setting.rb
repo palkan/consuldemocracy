@@ -1,31 +1,40 @@
+# typed: strict
 class Setting < ApplicationRecord
   validates :key, presence: true, uniqueness: true
 
   default_scope { order(id: :asc) }
 
+  sig { returns(T.nilable(String)) }
   def prefix
-    key.split(".").first
+    T.must(key).split(".").first
   end
 
+  sig { returns(T::Boolean) }
   def enabled?
     value.present?
   end
 
+  sig { returns(T.nilable(String)) }
   def content_type_group
-    key.split(".").second
+    T.must(key).split(".").second
   end
 
   class << self
+    extend T::Sig
+
+    sig { params(key: T.any(String, Symbol)).returns(T.nilable(String)) }
     def [](key)
       where(key: key).pick(:value).presence
     end
 
+    sig { params(key: T.any(String, Symbol), value: T.untyped).void }
     def []=(key, value)
       setting = find_by(key: key) || new(key: key)
       setting.value = value.presence
       setting.save!
     end
 
+    sig { params(from: T.any(String, Symbol), to: T.any(String, Symbol)).void }
     def rename_key(from:, to:)
       if where(key: to).empty?
         value = where(key: from).pick(:value).presence
@@ -34,15 +43,19 @@ class Setting < ApplicationRecord
       remove(from)
     end
 
+    sig { params(key: T.any(String, Symbol)).void }
     def remove(key)
       find_by(key: key).presence&.destroy
     end
 
+    sig { params(group: String).returns(T::Array[String]) }
     def accepted_content_types_for(group)
       mime_content_types = Setting["uploads.#{group}.content_types"]&.split || []
-      Setting.mime_types[group].select { |_, content_type| mime_content_types.include?(content_type) }.keys
+      Setting.mime_types.fetch(group)
+             .select { |_, content_type| mime_content_types.include?(content_type) }.keys
     end
 
+    sig { returns(T::Hash[String, T::Hash[String, String]]) }
     def mime_types
       {
         "images" => {
@@ -62,6 +75,7 @@ class Setting < ApplicationRecord
       }
     end
 
+    sig { returns(T::Hash[Symbol, T.untyped]) }
     def defaults
       {
         "feature.featured_proposals": nil,
@@ -197,55 +211,66 @@ class Setting < ApplicationRecord
       }
     end
 
+    sig { returns(String) }
     def default_org_name
       Tenant.current&.name || default_main_org_name
     end
 
+    sig { returns(String) }
     def default_main_org_name
       "CONSUL DEMOCRACY"
     end
 
+    sig { returns(String) }
     def default_mailer_from_address
       "noreply@#{Tenant.current_host.presence || "consuldemocracy.dev"}"
     end
 
+    sig { void }
     def reset_defaults
       defaults.each { |name, value| self[name] = value }
     end
 
+    sig { void }
     def add_new_settings
       defaults.each do |name, value|
         self[name] = value unless find_by(key: name)
       end
     end
 
+    sig { returns(T::Boolean) }
     def force_presence_date_of_birth?
       Setting["feature.remote_census"].present? &&
         Setting["remote_census.request.date_of_birth"].present?
     end
 
+    sig { returns(T::Boolean) }
     def force_presence_postal_code?
       Setting["feature.remote_census"].present? &&
         Setting["remote_census.request.postal_code"].present?
     end
 
+    sig { returns(ActiveSupport::TimeWithZone) }
     def archived_proposals_date_limit
       Setting["months_to_archive_proposals"].to_i.months.ago
     end
 
+    sig { returns(T::Array[Symbol]) }
     def enabled_locales
       locales = Setting["locales.enabled"].to_s.split.map(&:to_sym)
+      available_locales = T.cast(I18n.available_locales, T::Array[Symbol])
 
       [
         default_locale,
-        *((locales & I18n.available_locales).presence || I18n.available_locales)
+        *((locales & available_locales).presence || available_locales)
       ].uniq
     end
 
+    sig { returns(Symbol) }
     def default_locale
       locale = Setting["locales.default"].to_s.strip.to_sym
 
-      ([locale] & I18n.available_locales).first || I18n.default_locale
+      ([locale] & T.cast(I18n.available_locales, T::Array[Symbol])).first || I18n.default_locale
     end
   end
 end

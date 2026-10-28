@@ -1,5 +1,7 @@
+# typed: strict
 module Followable
   extend ActiveSupport::Concern
+  extend T::Sig
 
   included do
     has_many :follows, as: :followable, inverse_of: :followable, dependent: :destroy
@@ -10,6 +12,7 @@ module Followable
     }
   end
 
+  sig { params(user: T.nilable(User)).returns(T::Boolean) }
   def followed_by?(user)
     followers.include?(user)
   end

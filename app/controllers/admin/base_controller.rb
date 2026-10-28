@@ -1,3 +1,4 @@
+# typed: true
 class Admin::BaseController < ApplicationController
   include IpDeniedHandler
 
@@ -9,6 +10,7 @@ class Admin::BaseController < ApplicationController
 
   private
 
+    sig { void }
     def verify_administrator
       raise CanCan::AccessDenied unless current_user&.administrator?
     end

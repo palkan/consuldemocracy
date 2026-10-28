@@ -1,12 +1,16 @@
+# typed: strict
 class Dashboard::MailingController < Dashboard::BaseController
+  sig { void }
   def index
     authorize! :manage_mailing, proposal
   end
 
+  sig { void }
   def new
     authorize! :manage_mailing, proposal
   end
 
+  sig { void }
   def create
     authorize! :manage_mailing, proposal
 

@@ -1,15 +1,19 @@
+# typed: strict
 class Setting
   class LocalesSettings
+    extend T::Sig
     include ActiveModel::Model
     include ActiveModel::Attributes
 
     attribute :enabled, array: true, default: -> { Setting.enabled_locales }
     attribute :default, default: -> { Setting.default_locale }
 
+    sig { returns(T::Boolean) }
     def persisted?
       true
     end
 
+    sig { params(attributes: T.untyped).void }
     def update(attributes)
       assign_attributes(attributes)
 

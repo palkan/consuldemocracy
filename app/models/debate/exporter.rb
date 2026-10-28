@@ -1,14 +1,19 @@
+# typed: strict
 class Debate::Exporter
   include CsvExporter
+  extend T::Sig
 
+  sig { returns(T::Enumerable[Debate]) }
   attr_reader :records
 
+  sig { params(debates: T::Enumerable[Debate]).void }
   def initialize(debates)
     @records = debates
   end
 
   private
 
+    sig { returns(T::Array[String]) }
     def model_headers
       [
         I18n.t("admin.debates.index.id"),
@@ -18,11 +23,12 @@ class Debate::Exporter
       ]
     end
 
+    sig { params(debate: Debate).returns(T::Array[T.nilable(String)]) }
     def record_csv_values(debate)
       [
         debate.id.to_s,
         debate.title,
-        debate.author.email,
+        T.must(debate.author).email,
         I18n.l(debate.created_at, format: :datetime)
       ]
     end

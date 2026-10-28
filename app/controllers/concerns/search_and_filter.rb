@@ -1,12 +1,23 @@
+# typed: true
 module SearchAndFilter
   extend ActiveSupport::Concern
+  extend T::Helpers
+  extend T::Sig
+
+  requires_ancestor { ActionController::Base }
+
   include Search
 
   private
 
+    sig do
+      params(resources: T.any(Proposal::PrivateRelation, Debate::PrivateRelation))
+        .returns(T.any(Proposal::PrivateRelation, Debate::PrivateRelation))
+    end
     def search_and_filter(resources)
-      resources = if @current_order == "recommendations" && current_user.present?
-                    resources.recommendations(current_user)
+      user = current_user
+      resources = if @current_order == "recommendations" && user.present?
+                    resources.recommendations(user)
                   else
                     resources.for_render
                   end

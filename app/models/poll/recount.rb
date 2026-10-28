@@ -1,7 +1,10 @@
+# typed: strict
 class Poll::Recount < ApplicationRecord
   VALID_ORIGINS = %w[web booth letter].freeze
 
-  belongs_to :author, -> { with_hidden }, class_name: "User", inverse_of: :poll_recounts
+  belongs_to :author, -> { T.bind(self, User::PrivateRelation).with_hidden },
+             class_name: "User",
+             inverse_of: :poll_recounts
   belongs_to :booth_assignment
   belongs_to :officer_assignment
 
@@ -14,8 +17,9 @@ class Poll::Recount < ApplicationRecord
 
   before_save :update_logs
 
+  sig { void }
   def update_logs
-    amounts_changed = false
+    amounts_changed = T.let(false, T::Boolean)
 
     [:white, :null, :total].each do |amount|
       unless send("will_save_change_to_#{amount}_amount?") && send("#{amount}_amount_in_database").present?
@@ -29,8 +33,10 @@ class Poll::Recount < ApplicationRecord
     update_officer_author if amounts_changed
   end
 
+  sig { void }
   def update_officer_author
-    self.officer_assignment_id_log += ":#{officer_assignment_id_in_database}"
-    self.author_id_log += ":#{author_id_in_database}"
+    self.officer_assignment_id_log = T.must(officer_assignment_id_log) +
+                                     ":#{officer_assignment_id_in_database}"
+    self.author_id_log = T.must(author_id_log) + ":#{author_id_in_database}"
   end
 end

@@ -1,9 +1,11 @@
+# typed: true
 class Legislation::QuestionsController < Legislation::BaseController
   load_and_authorize_resource :process
   load_and_authorize_resource :question, through: :process
 
   has_orders %w[most_voted newest oldest], only: :show
 
+  sig { void }
   def show
     @answer = @question.answer_for_user(current_user) || Legislation::Answer.new
   end

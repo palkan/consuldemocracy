@@ -1,3 +1,4 @@
+# typed: strict
 class Budget < ApplicationRecord
   include Measurable
   include Sluggable
@@ -7,9 +8,12 @@ class Budget < ApplicationRecord
   translates :name, :main_link_text, :main_link_url, touch: true
   include Globalizable
 
-  class Translation
+  class Translation < Globalize::ActiveRecord::Translation
+    extend T::Sig
+
     validate :name_uniqueness_by_budget
 
+    sig { void }
     def name_uniqueness_by_budget
       if Budget.joins(:translations)
                .where(name: name)
@@ -19,11 +23,11 @@ class Budget < ApplicationRecord
     end
   end
 
-  CURRENCY_SYMBOLS = %w[€ $ £ ¥].freeze
-  VOTING_STYLES = %w[knapsack approval].freeze
+  CURRENCY_SYMBOLS = T.let(%w[€ $ £ ¥].freeze, T::Array[String])
+  VOTING_STYLES = T.let(%w[knapsack approval].freeze, T::Array[String])
 
   validates_translation :name, presence: true
-  validates_translation :main_link_url, presence: true, unless: -> { main_link_text.blank? }
+  validates_translation :main_link_url, presence: true, unless: ->(budget) { budget.main_link_text.blank? }
   validates :phase, inclusion: { in: ->(*) { Budget::Phase::PHASE_KINDS }}
   validates :currency_symbol, presence: true
   validates :slug, presence: true, format: /\A[a-z0-9\-_]+\z/
@@ -63,118 +67,146 @@ class Budget < ApplicationRecord
   class << self; undef :open; end
   scope :open, -> { where.not(phase: "finished") }
 
+  sig { returns(T.nilable(Budget)) }
   def self.current
     published.order(:created_at).last
   end
 
+  sig { returns(T.nilable(Budget::Phase)) }
   def current_phase
-    phases.send(phase)
+    phases.send(T.must(phase))
   end
 
+  sig { returns(Budget::Phase::PrivateAssociationRelation) }
   def published_phases
     phases.published.order(:id)
   end
 
+  sig { returns(T.nilable(ActiveSupport::TimeWithZone)) }
   def starts_at
     phases.published.first&.starts_at
   end
 
+  sig { returns(T.nilable(ActiveSupport::TimeWithZone)) }
   def ends_at
     phases.published.last&.ends_at
   end
 
+  sig { returns(T.nilable(String)) }
   def description
     description_for_phase(phase)
   end
 
+  sig { params(phase: T.nilable(String)).returns(T.nilable(String)) }
   def description_for_phase(phase)
-    if phases.exists? && phases.send(phase).description.present?
-      phases.send(phase).description
+    if phases.exists? && phases.send(T.must(phase)).description.present?
+      phases.send(T.must(phase)).description
     else
       send("description_#{phase}")
     end
   end
 
+  sig { returns(Integer) }
   def self.title_max_length
     80
   end
 
+  sig { void }
   def publish!
     update!(published: true)
   end
 
+  sig { returns(T::Boolean) }
   def drafting?
     !published?
   end
 
+  sig { returns(T::Boolean) }
   def informing?
     phase == "informing"
   end
 
+  sig { returns(T::Boolean) }
   def accepting?
     phase == "accepting"
   end
 
+  sig { returns(T::Boolean) }
   def reviewing?
     phase == "reviewing"
   end
 
+  sig { returns(T::Boolean) }
   def selecting?
     phase == "selecting"
   end
 
+  sig { returns(T::Boolean) }
   def valuating?
     phase == "valuating"
   end
 
+  sig { returns(T::Boolean) }
   def publishing_prices?
     phase == "publishing_prices"
   end
 
+  sig { returns(T::Boolean) }
   def balloting?
     phase == "balloting"
   end
 
+  sig { returns(T::Boolean) }
   def reviewing_ballots?
     phase == "reviewing_ballots"
   end
 
+  sig { returns(T::Boolean) }
   def finished?
     phase == "finished"
   end
 
+  sig { returns(T::Boolean) }
   def published_prices?
     Budget::Phase::PUBLISHED_PRICES_PHASES.include?(phase)
   end
 
+  sig { returns(T.nilable(T::Boolean)) }
   def valuating_or_later?
     current_phase&.valuating_or_later?
   end
 
+  sig { returns(T.nilable(T::Boolean)) }
   def publishing_prices_or_later?
     current_phase&.publishing_prices_or_later?
   end
 
+  sig { returns(T.nilable(T::Boolean)) }
   def balloting_or_later?
     current_phase&.balloting_or_later?
   end
 
+  sig { returns(T.nilable(T::Boolean)) }
   def balloting_finished?
     balloting_or_later? && !balloting?
   end
 
+  sig { returns(T::Boolean) }
   def single_group?
     groups.one?
   end
 
+  sig { returns(T::Boolean) }
   def single_heading?
     single_group? && headings.one?
   end
 
+  sig { params(heading: Budget::Heading).returns(T.nilable(Integer)) }
   def heading_price(heading)
     heading_ids.include?(heading.id) ? heading.price : -1
   end
 
+  sig { params(amount: T.nilable(Numeric)).returns(T.nilable(String)) }
   def formatted_amount(amount)
     ActionController::Base.helpers.number_to_currency(amount,
                                                       precision: 0,
@@ -182,10 +214,12 @@ class Budget < ApplicationRecord
                                                       unit: currency_symbol)
   end
 
+  sig { params(heading: Budget::Heading).returns(T.nilable(String)) }
   def formatted_heading_price(heading)
     formatted_amount(heading_price(heading))
   end
 
+  sig { returns(T::Array[String]) }
   def investments_orders
     case phase
     when "accepting", "reviewing", "finished"
@@ -197,6 +231,7 @@ class Budget < ApplicationRecord
     end
   end
 
+  sig { returns(T::Array[String]) }
   def investments_filters
     [
       ("winners" if finished?),
@@ -207,49 +242,57 @@ class Budget < ApplicationRecord
     ].compact
   end
 
+  sig { void }
   def email_selected
     investments.selected.order(:id).each do |investment|
       Mailer.budget_investment_selected(investment).deliver_later
     end
   end
 
+  sig { void }
   def email_unselected
     investments.unselected.order(:id).each do |investment|
       Mailer.budget_investment_unselected(investment).deliver_later
     end
   end
 
+  sig { returns(T::Boolean) }
   def has_winning_investments?
     investments.winners.any?
   end
 
+  sig { returns(T::Array[String]) }
   def investments_milestone_tags
     investments.winners.map(&:milestone_tag_list).flatten.uniq.sort
   end
 
+  sig { returns(T::Boolean) }
   def approval_voting?
     voting_style == "approval"
   end
 
+  sig { returns(T::Boolean) }
   def show_money?
     !hide_money?
   end
 
   private
 
+    sig { void }
     def generate_phases
       Budget::Phase::PHASE_KINDS.each do |phase|
         Budget::Phase.create(
           budget: self,
           kind: phase,
           name: I18n.t("budgets.phase.#{phase}"),
-          prev_phase: phases&.last,
-          starts_at: phases&.last&.ends_at || Date.current,
-          ends_at: (phases&.last&.ends_at || Date.current) + 1.month
+          prev_phase: phases.last,
+          starts_at: phases.last&.ends_at || Date.current,
+          ends_at: (phases.last&.ends_at || Date.current) + 1.month
         )
       end
     end
 
+    sig { returns(T::Boolean) }
     def generate_slug?
       slug.nil? || drafting?
     end

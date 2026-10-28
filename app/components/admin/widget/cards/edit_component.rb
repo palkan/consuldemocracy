@@ -1,8 +1,17 @@
+# typed: strict
 class Admin::Widget::Cards::EditComponent < ApplicationComponent
   include Header
 
-  attr_reader :card, :index_path, :form_path
+  sig { returns(::Widget::Card) }
+  attr_reader :card
 
+  sig { returns(String) }
+  attr_reader :index_path
+
+  sig { returns(T.nilable(String)) }
+  attr_reader :form_path
+
+  sig { params(card: ::Widget::Card, index_path: String, form_path: T.nilable(String)).void }
   def initialize(card, index_path:, form_path: nil)
     @card = card
     @index_path = index_path
@@ -11,6 +20,7 @@ class Admin::Widget::Cards::EditComponent < ApplicationComponent
 
   private
 
+    sig { override.returns(String) }
     def title
       if card.header_or_sdg_header?
         t("admin.homepage.edit.header_title")

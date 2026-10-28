@@ -1,3 +1,4 @@
+# typed: strict
 class Budget
   class Ballot
     class Line < ApplicationRecord
@@ -17,7 +18,9 @@ class Budget
 
       before_validation :set_denormalized_ids
 
+      sig { void }
       def check_enough_resources
+        ballot = T.must(self.ballot)
         ballot.with_lock do
           unless ballot.enough_resources?(investment)
             errors.add(:resources, ballot.not_enough_resources_error)
@@ -25,19 +28,22 @@ class Budget
         end
       end
 
+      sig { void }
       def check_valid_heading
-        return if ballot.valid_heading?(heading)
+        return if T.must(ballot).valid_heading?(T.must(heading))
 
         errors.add(:heading,
                    "This heading's budget is invalid, or a heading on the same group was already selected")
       end
 
+      sig { void }
       def check_selected
-        errors.add(:investment, "unselected investment") unless investment.selected?
+        errors.add(:investment, "unselected investment") unless T.must(investment).selected?
       end
 
       private
 
+        sig { void }
         def set_denormalized_ids
           self.heading_id ||= investment&.heading_id
           self.group_id   ||= investment&.group_id

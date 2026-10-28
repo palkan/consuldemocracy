@@ -1,4 +1,7 @@
+# typed: true
 class Management::BaseController < ActionController::Base
+  extend T::Sig
+
   include TenantVariants
   include GlobalizeFallbacks
   include AccessDeniedHandler
@@ -16,32 +19,38 @@ class Management::BaseController < ActionController::Base
 
   private
 
+    sig { void }
     def verify_manager
       raise CanCan::AccessDenied if current_manager.blank?
     end
 
+    sig { returns(T.nilable(User)) }
     def current_manager
       @current_manager ||= manager_user
     end
 
+    sig { returns(String) }
     def current_manager_login
-      if current_manager.administrator?
-        "admin_user_#{current_manager.id}"
+      if T.must(current_manager).administrator?
+        "admin_user_#{T.must(current_manager).id}"
       else
-        "manager_user_#{current_manager.id}"
+        "manager_user_#{T.must(current_manager).id}"
       end
     end
 
+    sig { returns(T.nilable(User)) }
     def manager_user
       user = warden.authenticate!(scope: :user)
 
       user if user.administrator? || user.manager?
     end
 
+    sig { returns(User) }
     def current_user
       managed_user
     end
 
+    sig { returns(User) }
     def managed_user
       @managed_user ||= Verification::Management::ManagedUser.find(
         session[:document_type],
@@ -49,6 +58,7 @@ class Management::BaseController < ActionController::Base
       )
     end
 
+    sig { params(alert_msg: String).void }
     def check_verified_user(alert_msg)
       return if managed_user.persisted? && managed_user.level_two_or_three_verified?
 
@@ -56,6 +66,7 @@ class Management::BaseController < ActionController::Base
       redirect_to management_document_verifications_path, alert: message
     end
 
+    sig { params(action: T.proc.void).void }
     def switch_locale(&action)
       if params[:locale] && Setting.enabled_locales.include?(params[:locale].to_sym)
         session[:locale] = params[:locale].to_s
@@ -66,6 +77,7 @@ class Management::BaseController < ActionController::Base
       I18n.with_locale(session[:locale], &action)
     end
 
+    sig { void }
     def clear_password
       session[:new_password] = nil
     end

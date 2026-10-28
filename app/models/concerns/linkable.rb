@@ -1,3 +1,4 @@
+# typed: strict
 module Linkable
   extend ActiveSupport::Concern
 

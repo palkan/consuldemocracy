@@ -1,13 +1,21 @@
+# typed: true
 class ImageSuggestionsController < ApplicationController
   before_action :authenticate_user!
   skip_authorization_check
 
   rate_limit to: 10,
              within: 15.minutes,
-             by: -> { current_user.id },
+             by: lambda {
+               T.bind(self, ImageSuggestionsController)
+               T.must(current_user).id
+             },
              only: :create,
-             with: -> { render_rate_limit_response }
+             with: lambda {
+               T.bind(self, ImageSuggestionsController)
+               render_rate_limit_response
+             }
 
+  sig { void }
   def create
     @suggestions = ImageSuggestions::Llm::Client.call(
       title: image_suggestion_params[:title],
@@ -19,6 +27,7 @@ class ImageSuggestionsController < ApplicationController
     end
   end
 
+  sig { void }
   def attach
     begin
       attachment = ImageSuggestions::Pexels.download(params[:id])
@@ -44,6 +53,7 @@ class ImageSuggestionsController < ApplicationController
 
   private
 
+    sig { void }
     def render_rate_limit_response
       @suggestions = ImageSuggestions::Llm::Client::Response.new
       @suggestions.errors << I18n.t("images.errors.messages.rate_limit_exceeded")
@@ -53,6 +63,7 @@ class ImageSuggestionsController < ApplicationController
       end
     end
 
+    sig { returns(T.any(ActionController::Parameters, T::Hash[T.untyped, T.untyped])) }
     def image_suggestion_params
       @image_suggestion_params ||= params.require(params[:resource_type].parameterize.underscore)
                                          .permit(translations_attributes: [:title, :description])

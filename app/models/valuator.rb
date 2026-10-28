@@ -1,3 +1,4 @@
+# typed: strict
 class Valuator < ApplicationRecord
   belongs_to :user, touch: true
   belongs_to :valuator_group
@@ -9,14 +10,17 @@ class Valuator < ApplicationRecord
 
   validates :user_id, presence: true, uniqueness: true
 
+  sig { returns(T.nilable(String)) }
   def description_or_email
     description.presence || email
   end
 
+  sig { returns(T.nilable(String)) }
   def description_or_name
     description.presence || name
   end
 
+  sig { returns(T::Array[Integer]) }
   def assigned_investment_ids
     investment_ids + valuator_group&.investment_ids.to_a
   end

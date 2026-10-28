@@ -1,4 +1,13 @@
+# typed: strict
 module DocumentParser
+  extend T::Sig
+
+  sig do
+    params(
+      document_type: T.nilable(T.any(String, Integer)),
+      document_number: T.nilable(T.any(String, Integer))
+    ).returns(T::Array[String])
+  end
   def get_document_number_variants(document_type, document_number)
     return [] if document_number.blank?
 
@@ -20,6 +29,7 @@ module DocumentParser
     variants
   end
 
+  sig { params(document_number: String).returns([String, T.nilable(String)]) }
   def split_letter_from(document_number)
     letter = document_number.last
     if letter[/[A-Za-z]/] == letter
@@ -27,12 +37,13 @@ module DocumentParser
     else
       letter = nil
     end
-    [document_number, letter]
+    [T.must(document_number), letter]
   end
 
   # if the number has less digits than it should, pad with zeros to the left and add each variant to the list
   # For example, if the initial document_number is 1234, and digits=8, the result is
   # ['1234', '01234', '001234', '0001234']
+  sig { params(document_number: T.any(String, Integer), digits: Integer).returns(T::Array[String]) }
   def get_number_variants_with_leading_zeroes_from(document_number, digits = 8)
     document_number = document_number.to_s.last(digits) # Keep only the last x digits
     document_number = document_number.gsub(/^0+/, "")   # Removes leading zeros
@@ -49,6 +60,7 @@ module DocumentParser
   # Generates uppercase and lowercase variants of a series of numbers, if the letter is present
   # If number_variants == ['1234', '01234'] & letter == 'A', the result is
   # ['1234a', '1234A', '01234a', '01234A']
+  sig { params(number_variants: T::Array[String], letter: T.nilable(String)).returns(T::Array[String]) }
   def get_letter_variants(number_variants, letter)
     variants = []
     if letter.present?
@@ -59,6 +71,7 @@ module DocumentParser
     variants
   end
 
+  sig { params(document_type: T.nilable(T.any(String, Integer))).returns(T::Boolean) }
   def dni?(document_type)
     document_type.to_s == "1"
   end

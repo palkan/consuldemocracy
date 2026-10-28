@@ -1,10 +1,15 @@
+# typed: true
 class PagesController < ApplicationController
   include FeatureFlags
 
   skip_authorization_check
 
-  feature_flag :help_page, if: lambda { params[:id] == "help/index" }
+  feature_flag :help_page, if: lambda {
+    T.bind(self, PagesController)
+    params[:id] == "help/index"
+  }
 
+  sig { void }
   def show
     @custom_page = SiteCustomization::Page.published.find_by(slug: params[:id])
 

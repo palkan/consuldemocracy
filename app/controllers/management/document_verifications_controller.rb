@@ -1,11 +1,14 @@
+# typed: true
 class Management::DocumentVerificationsController < Management::BaseController
   before_action :clean_document_number, only: :check
   before_action :set_document, only: :check
 
+  sig { void }
   def index
     @document_verification = Verification::Management::Document.new
   end
 
+  sig { void }
   def check
     @document_verification = Verification::Management::Document.new(document_verification_params)
 
@@ -26,6 +29,7 @@ class Management::DocumentVerificationsController < Management::BaseController
     end
   end
 
+  sig { void }
   def create
     @document_verification = Verification::Management::Document.new(document_verification_params)
     @document_verification.verify
@@ -34,20 +38,24 @@ class Management::DocumentVerificationsController < Management::BaseController
 
   private
 
+    sig { returns(ActionController::Parameters) }
     def document_verification_params
       params.require(:document_verification).permit(allowed_params)
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def allowed_params
       [:document_type, :document_number, :date_of_birth, :postal_code]
     end
 
+    sig { void }
     def set_document
       session[:document_type] = params[:document_verification][:document_type]
       session[:document_number] = params[:document_verification][:document_number]
       clear_password
     end
 
+    sig { void }
     def clean_document_number
       return if params[:document_verification][:document_number].blank?
 

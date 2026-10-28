@@ -1,12 +1,16 @@
+# typed: true
 class Admin::SiteCustomization::DocumentsController < Admin::SiteCustomization::BaseController
+  sig { void }
   def index
     @documents = Document.admin.page(params[:page])
   end
 
+  sig { void }
   def new
     @document = Document.new
   end
 
+  sig { void }
   def create
     @document = initialize_document
     if @document.save
@@ -18,6 +22,7 @@ class Admin::SiteCustomization::DocumentsController < Admin::SiteCustomization::
     end
   end
 
+  sig { void }
   def destroy
     @document = Document.find(params[:id])
     @document.destroy!
@@ -28,6 +33,7 @@ class Admin::SiteCustomization::DocumentsController < Admin::SiteCustomization::
 
   private
 
+    sig { returns(Document) }
     def initialize_document
       document = Document.new
       document.attachment = params.dig(:document, :attachment)

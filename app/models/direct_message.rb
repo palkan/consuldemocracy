@@ -1,3 +1,4 @@
+# typed: strict
 class DirectMessage < ApplicationRecord
   belongs_to :sender,   class_name: "User", inverse_of: :direct_messages_sent
   belongs_to :receiver, class_name: "User", inverse_of: :direct_messages_received
@@ -10,13 +11,14 @@ class DirectMessage < ApplicationRecord
 
   scope :today, lambda { where(created_at: Date.current.all_day) }
 
+  sig { void }
   def max_per_day
     return if errors.any?
 
     max = Setting[:direct_message_max_per_day]
     return unless max
 
-    if sender.direct_messages_sent.today.count >= max.to_i
+    if T.must(sender).direct_messages_sent.today.count >= max.to_i
       errors.add(:title, I18n.t("activerecord.errors.models.direct_message.attributes.max_per_day.invalid"))
     end
   end

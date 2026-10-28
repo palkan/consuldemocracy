@@ -1,3 +1,4 @@
+# typed: true
 class Legislation::AnswersController < Legislation::BaseController
   before_action :authenticate_user!
   before_action :verify_resident!
@@ -8,6 +9,7 @@ class Legislation::AnswersController < Legislation::BaseController
 
   respond_to :html, :js
 
+  sig { void }
   def create
     if @process.debate_phase.open?
       @answer.user = current_user
@@ -27,10 +29,12 @@ class Legislation::AnswersController < Legislation::BaseController
 
   private
 
+    sig { returns(ActionController::Parameters) }
     def answer_params
       params.require(:legislation_answer).permit(allowed_params)
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def allowed_params
       [:legislation_question_option_id]
     end

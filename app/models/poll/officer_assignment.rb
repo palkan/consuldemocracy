@@ -1,3 +1,4 @@
+# typed: strict
 class Poll
   class OfficerAssignment < ApplicationRecord
     belongs_to :officer
@@ -25,12 +26,15 @@ class Poll
 
     before_create :log_user_data
 
+    sig { void }
     def log_user_data
-      self.user_data_log = "#{officer.user_id} - #{officer.user.name_and_email}"
+      officer = T.must(self.officer)
+      self.user_data_log = "#{officer.user_id} - #{T.must(officer.user).name_and_email}"
     end
 
+    sig { returns(T.nilable(Poll::Booth)) }
     def booth
-      booth_assignment.booth
+      T.must(booth_assignment).booth
     end
   end
 end

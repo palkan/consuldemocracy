@@ -1,3 +1,4 @@
+# typed: true
 class Valuation::BudgetInvestmentsController < Valuation::BaseController
   include FeatureFlags
 
@@ -13,10 +14,11 @@ class Valuation::BudgetInvestmentsController < Valuation::BaseController
 
   load_and_authorize_resource :investment, class: "Budget::Investment"
 
+  sig { void }
   def index
     @heading_filters = heading_filters
-    @investments = if current_user.valuator?
-                     @budget.investments.visible_to_valuator(current_user.valuator)
+    @investments = if T.must(current_user).valuator?
+                     @budget.investments.visible_to_valuator(T.must(current_user).valuator)
                             .scoped_filter(params.permit(:budget_id, :heading_id), @current_filter)
                             .order(cached_votes_up: :desc)
                             .page(params[:page])
@@ -25,6 +27,7 @@ class Valuation::BudgetInvestmentsController < Valuation::BaseController
                    end
   end
 
+  sig { void }
   def valuate
     if valid_price_params? && @investment.update(valuation_params)
       if @investment.unfeasible_email_pending?
@@ -39,33 +42,38 @@ class Valuation::BudgetInvestmentsController < Valuation::BaseController
     end
   end
 
+  sig { void }
   def show
   end
 
+  sig { void }
   def edit
   end
 
   private
 
+    sig { void }
     def load_budget
       @budget = Budget.find_by_slug_or_id! params[:budget_id]
     end
 
+    sig { void }
     def load_investment
       @investment = @budget.investments.find params[:id]
     end
 
+    sig { returns(T::Array[T::Hash[Symbol, T.untyped]]) }
     def heading_filters
-      investments = @budget.investments.visible_to_valuator(current_user.valuator)
+      investments = @budget.investments.visible_to_valuator(T.must(current_user).valuator)
       investment_headings = Budget::Heading.where(id: investments.pluck(:heading_id)).sort_by(&:name)
 
-      all_headings_filter = [
+      all_headings_filter = T.let([
         {
           name: t("valuation.budget_investments.index.headings_filter_all"),
           id: nil,
           count: investments.size
         }
-      ]
+      ], T::Array[T::Hash[Symbol, T.untyped]])
 
       investment_headings.reduce(all_headings_filter) do |filters, heading|
         filters << {
@@ -76,10 +84,12 @@ class Valuation::BudgetInvestmentsController < Valuation::BaseController
       end
     end
 
+    sig { returns(ActionController::Parameters) }
     def valuation_params
       params.require(:budget_investment).permit(allowed_params)
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def allowed_params
       [
         :price, :price_first_year, :price_explanation,
@@ -88,20 +98,23 @@ class Valuation::BudgetInvestmentsController < Valuation::BaseController
       ]
     end
 
+    sig { void }
     def restrict_access
-      unless current_user.administrator? || @budget.valuating?
+      unless T.must(current_user).administrator? || @budget.valuating?
         raise CanCan::AccessDenied, I18n.t("valuation.budget_investments.not_in_valuating_phase")
       end
     end
 
+    sig { void }
     def restrict_access_to_assigned_items
-      return if current_user.administrator? ||
+      return if T.must(current_user).administrator? ||
                 Budget::ValuatorAssignment.exists?(investment_id: params[:id],
-                                                   valuator_id: current_user.valuator.id)
+                                                   valuator_id: T.must(T.must(current_user).valuator).id)
 
       raise ActionController::RoutingError, "Not Found"
     end
 
+    sig { returns(T::Boolean) }
     def valid_price_params?
       if /\D/.match params[:budget_investment][:price]
         @investment.errors.add(:price, I18n.t("budgets.investments.wrong_price_format"))

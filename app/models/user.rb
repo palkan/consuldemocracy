@@ -1,3 +1,4 @@
+# typed: true
 class User < ApplicationRecord
   include Verification
 
@@ -133,6 +134,7 @@ class User < ApplicationRecord
   end
 
   # Get the existing user by email if the provider gives us a verified email.
+  sig { params(auth: OmniAuth::AuthHash).returns(User) }
   def self.first_or_initialize_for_oauth(auth)
     oauth_email           = auth.info.email
     oauth_verified        = auth.info.verified || auth.info.verified_email || auth.info.email_verified
@@ -149,6 +151,12 @@ class User < ApplicationRecord
     )
   end
 
+  sig do
+    params(
+      response: T.any(CensusApi::Response, RemoteCensusApi::Response, LocalCensus::Response),
+      params: T::Hash[T.untyped, T.untyped]
+    ).returns(User)
+  end
   def self.create_from_census_response!(response, params = {})
     create!({
       verified_at: Time.current,
@@ -157,84 +165,104 @@ class User < ApplicationRecord
       terms_of_service: "1",
       email: nil,
       gender: response.gender,
-      date_of_birth: response.date_of_birth.in_time_zone.to_datetime,
+      date_of_birth: T.must(response.date_of_birth).in_time_zone.to_datetime,
       geozone: Geozone.find_by(census_code: response.district_code)
     }.merge(params))
   end
 
+  sig { returns(T.nilable(String)) }
   def name
-    organization? ? organization.name : username
+    organization? ? T.must(organization).name : username
   end
 
+  sig { params(group: Budget::Group).returns(T::Boolean) }
   def voted_in_group?(group)
     votes.where(votable: Budget::Investment.where(group: group)).exists?
   end
 
+  sig { params(group: Budget::Group).returns(Budget::Heading::PrivateRelation) }
   def headings_voted_within_group(group)
     Budget::Heading.where(id: voted_investments.by_group(group).pluck(:heading_id))
   end
 
+  sig { returns(Budget::Investment::PrivateRelation) }
   def voted_investments
     Budget::Investment.where(id: votes.where(votable: Budget::Investment.all).pluck(:votable_id))
   end
 
+  sig { returns(T::Boolean) }
   def administrator?
     administrator.present?
   end
 
+  sig { returns(T::Boolean) }
   def moderator?
     moderator.present?
   end
 
+  sig { returns(T::Boolean) }
   def valuator?
     valuator.present?
   end
 
+  sig { returns(T::Boolean) }
   def manager?
     manager.present?
   end
 
+  sig { returns(T::Boolean) }
   def sdg_manager?
     sdg_manager.present?
   end
 
+  sig { returns(T::Boolean) }
   def poll_officer?
     poll_officer.present?
   end
 
+  sig { returns(T::Boolean) }
   def organization?
     organization.present?
   end
 
+  sig { returns(T.nilable(T::Boolean)) }
   def verified_organization?
     organization&.verified?
   end
 
+  sig { returns(T.nilable(T::Boolean)) }
   def official?
-    official_level && official_level > 0
+    level = official_level
+    level && level > 0
   end
 
+  sig { params(position: T.nilable(String), level: T.nilable(T.any(Integer, String))).void }
   def add_official_position!(position, level)
     return if position.blank? || level.blank?
 
     update! official_position: position, official_level: level.to_i
   end
 
+  sig { void }
   def remove_official_position!
     update! official_position: nil, official_level: 0
   end
 
+  sig { returns(T::Boolean) }
   def has_official_email?
     domain = Setting["email_domain_for_officials"]
-    email.present? && ((email.end_with? "@#{domain}") || (email.end_with? ".#{domain}"))
+    user_email = email.to_s
+    user_email.present? && ((user_email.end_with? "@#{domain}") || (user_email.end_with? ".#{domain}"))
   end
 
+  sig { returns(T::Boolean) }
   def display_official_position_badge?
-    return true if official_level > 1
+    return true if T.must(official_level) > 1
 
     official_position_badge? && official_level == 1
   end
 
+  sig { void }
   def block
     hide
 
@@ -247,11 +275,14 @@ class User < ApplicationRecord
     remove_roles
   end
 
+  sig { void }
   def full_restore
     ActiveRecord::Base.transaction do
       Debate.restore_all debates.where(hidden_at: hidden_at..)
       Comment.restore_all comments.where(hidden_at: hidden_at..)
-      Legislation::Proposal.restore_all legislation_proposals.only_hidden.where(hidden_at: hidden_at..)
+      Legislation::Proposal.restore_all(
+        Legislation::Proposal.only_hidden.where(author_id: id, hidden_at: hidden_at..)
+      )
       Proposal.restore_all proposals.where(hidden_at: hidden_at..)
       Budget::Investment.restore_all budget_investments.where(hidden_at: hidden_at..)
       ProposalNotification.restore_all(
@@ -262,6 +293,7 @@ class User < ApplicationRecord
     end
   end
 
+  sig { params(erase_reason: T.nilable(String)).void }
   def erase(erase_reason = nil)
     update!(
       erased_at: Time.current,
@@ -281,10 +313,12 @@ class User < ApplicationRecord
     remove_roles
   end
 
+  sig { returns(T::Boolean) }
   def erased?
     erased_at.present?
   end
 
+  sig { void }
   def remove_roles
     administrator&.destroy!
     valuator&.destroy!
@@ -293,6 +327,12 @@ class User < ApplicationRecord
     sdg_manager&.destroy!
   end
 
+  sig do
+    params(
+      document_number: T.nilable(T.any(String, Integer)),
+      document_type: T.nilable(T.any(String, Integer))
+    ).void
+  end
   def take_votes_if_erased_document(document_number, document_type)
     erased_user = User.erased.find_by(document_number: document_number,
                                       document_type: document_type)
@@ -302,6 +342,7 @@ class User < ApplicationRecord
     end
   end
 
+  sig { params(other_user: T.nilable(User)).void }
   def take_votes_from(other_user)
     return if other_user.blank?
 
@@ -329,10 +370,12 @@ class User < ApplicationRecord
     update!(former_users_data_log: "#{former_users_data_log} | #{data_log}")
   end
 
+  sig { returns(T::Boolean) }
   def locked?
     Lock.find_or_create_by!(user: self).locked?
   end
 
+  sig { params(term: T.nilable(String)).returns(User::PrivateRelation) }
   def self.search(term)
     return none if term.blank?
 
@@ -340,41 +383,50 @@ class User < ApplicationRecord
     where("email = ? OR username ILIKE ?", search, "%#{search}%")
   end
 
+  sig { returns(Integer) }
   def self.username_max_length
     @username_max_length ||= columns.find { |c| c.name == "username" }.limit || 60
   end
 
+  sig { returns(Integer) }
   def self.minimum_required_age
     (Setting["min_age_to_participate"] || 16).to_i
   end
 
+  sig { returns(T::Boolean) }
   def show_welcome_screen?
     verification = Setting["feature.user.skip_verification"].present? || unverified?
     sign_in_count == 1 && verification && !organization && !administrator?
   end
 
+  sig { returns(T::Boolean) }
   def password_required?
     return false if skip_password_validation
 
     super
   end
 
+  sig { returns(T::Boolean) }
   def username_required?
     !organization? && !erased?
   end
 
+  sig { returns(T::Boolean) }
   def email_required?
     !erased? && (unverified? || registering_from_web)
   end
 
+  sig { returns(String) }
   def locale
     self[:locale] || Setting.default_locale.to_s
   end
 
+  sig { returns(T::Boolean) }
   def confirmation_required?
-    super && !registering_with_oauth
+    T.let(super, T::Boolean) && !registering_with_oauth
   end
 
+  sig { void }
   def send_oauth_confirmation_instructions
     if oauth_email != email || confirmed_at.nil?
       update(confirmed_at: nil)
@@ -383,14 +435,17 @@ class User < ApplicationRecord
     update(oauth_email: nil) if oauth_email.present?
   end
 
+  sig { returns(String) }
   def name_and_email
     "#{name} (#{email})"
   end
 
+  sig { returns(T.nilable(Integer)) }
   def age
     Age.in_years(date_of_birth)
   end
 
+  sig { returns(TrueClass) }
   def save_requiring_finish_signup
     begin
       self.registering_with_oauth = true
@@ -403,24 +458,29 @@ class User < ApplicationRecord
     true
   end
 
+  sig { returns(Ability) }
   def ability
     @ability ||= Ability.new(self)
   end
   delegate :can?, :cannot?, to: :ability
 
+  sig { returns(T.any(Proposal::PrivateCollectionProxy, Proposal::PrivateAssociationRelation)) }
   def public_proposals
     public_activity? ? proposals : proposals.none
   end
 
+  sig { returns(T.any(Debate::PrivateCollectionProxy, Debate::PrivateAssociationRelation)) }
   def public_debates
     public_activity? ? debates : debates.none
   end
 
+  sig { returns(T.any(Comment::PrivateCollectionProxy, Comment::PrivateAssociationRelation)) }
   def public_comments
     public_activity? ? comments : comments.none
   end
 
   # overwritting of Devise method to allow login using email OR username
+  sig { params(warden_conditions: T::Hash[Symbol, T.untyped]).returns(T.nilable(User)) }
   def self.find_for_database_authentication(warden_conditions)
     conditions = warden_conditions.dup
     login = conditions.delete(:login)
@@ -428,19 +488,23 @@ class User < ApplicationRecord
       where(conditions.to_hash).find_by(["username = ?", login])
   end
 
+  sig { returns(T::Array[String]) }
   def interests
     followables = follows.map(&:followable)
     followables.compact.map { |followable| followable.tags.map(&:name) }.flatten.compact.uniq
   end
 
+  sig { params(notification: Symbol, "*": T.untyped).void }
   def send_devise_notification(notification, *)
     devise_mailer.send(notification, self, *).deliver_later
   end
 
+  sig { void }
   def add_subscriptions_token
     update!(subscriptions_token: SecureRandom.base58(32)) if subscriptions_token.blank?
   end
 
+  sig { returns({ digit: Integer, lower: Integer, symbol: Integer, upper: Integer }) }
   def self.password_complexity
     if Tenant.current_secrets.dig(:security, :password_complexity)
       { digit: 1, lower: 1, symbol: 0, upper: 1 }
@@ -449,6 +513,7 @@ class User < ApplicationRecord
     end
   end
 
+  sig { returns(String) }
   def self.random_password
     lowercase = ("a".."z").to_a
     uppercase = ("A".."Z").to_a
@@ -465,24 +530,29 @@ class User < ApplicationRecord
     characters.shuffle.join
   end
 
+  sig { returns(Integer) }
   def self.maximum_attempts
     (Tenant.current_secrets.dig(:security, :lockable, :maximum_attempts) || 20).to_i
   end
 
+  sig { returns(ActiveSupport::Duration) }
   def self.unlock_in
     (Tenant.current_secrets.dig(:security, :lockable, :unlock_in) || 1).to_f.hours
   end
 
+  sig { returns(String) }
   def to_param
     "#{id}-#{slug}"
   end
 
+  sig { returns(String) }
   def slug
     username.to_s.parameterize
   end
 
   private
 
+    sig { void }
     def validate_username_length
       validator = ActiveModel::Validations::LengthValidator.new(
         attributes: :username,

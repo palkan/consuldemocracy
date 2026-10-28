@@ -1,3 +1,4 @@
+# typed: strict
 class SiteCustomization::Page < ApplicationRecord
   VALID_STATUSES = %w[draft published].freeze
   include Cardable
@@ -20,6 +21,7 @@ class SiteCustomization::Page < ApplicationRecord
   scope :with_same_locale, -> { joins(:translations).locale }
   scope :locale, -> { where("site_customization_page_translations.locale": I18n.locale) }
 
+  sig { returns(String) }
   def url
     "/#{slug}"
   end

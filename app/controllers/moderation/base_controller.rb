@@ -1,3 +1,4 @@
+# typed: strict
 class Moderation::BaseController < ApplicationController
   layout "admin"
 
@@ -8,6 +9,7 @@ class Moderation::BaseController < ApplicationController
 
   private
 
+    sig { void }
     def verify_moderator
       raise CanCan::AccessDenied unless current_user&.moderator? || current_user&.administrator?
     end

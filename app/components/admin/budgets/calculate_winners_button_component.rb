@@ -1,6 +1,12 @@
+# typed: strict
 class Admin::Budgets::CalculateWinnersButtonComponent < ApplicationComponent
-  attr_reader :budget, :from_investments
+  sig { returns(Budget) }
+  attr_reader :budget
 
+  sig { returns(T::Boolean) }
+  attr_reader :from_investments
+
+  sig { params(budget: Budget, from_investments: T::Boolean).void }
   def initialize(budget, from_investments: false)
     @budget = budget
     @from_investments = from_investments
@@ -8,6 +14,7 @@ class Admin::Budgets::CalculateWinnersButtonComponent < ApplicationComponent
 
   private
 
+    sig { returns(String) }
     def text
       if budget.investments.winners.empty?
         t("admin.budgets.winners.calculate")
@@ -16,6 +23,7 @@ class Admin::Budgets::CalculateWinnersButtonComponent < ApplicationComponent
       end
     end
 
+    sig { returns(T.nilable(String)) }
     def html_class
       "button hollow float-right clear" if from_investments
     end

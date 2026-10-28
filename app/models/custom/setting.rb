@@ -1,7 +1,10 @@
-load Rails.root.join("app", "models", "setting.rb")
+# typed: strict
+load Rails.root.join("app", "models", "setting.rb").to_s
 
 class Setting
   class << self
+    extend T::Sig
+
     alias_method :consul_defaults, :defaults
 
     # Change this code when you'd like to add settings that aren't
@@ -18,6 +21,7 @@ class Setting
     # The tests in the spec/ folder rely on CONSUL DEMOCRACY's default
     # settings, so it's recommended not to change the default settings
     # in the test environment.
+    sig { returns(T::Hash[Symbol, T.untyped]) }
     def defaults
       if Rails.env.test?
         consul_defaults

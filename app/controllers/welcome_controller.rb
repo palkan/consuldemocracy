@@ -1,3 +1,4 @@
+# typed: true
 class WelcomeController < ApplicationController
   skip_authorization_check
   before_action :set_user_recommendations, only: :index, if: :current_user
@@ -5,6 +6,7 @@ class WelcomeController < ApplicationController
 
   layout "devise", only: :welcome
 
+  sig { void }
   def index
     @header = Widget::Card.header.first
     @feeds = Widget::Feed.active
@@ -12,10 +14,11 @@ class WelcomeController < ApplicationController
     @remote_translation_resources = [*@feeds, *@recommended_debates, *@recommended_proposals]
   end
 
+  sig { void }
   def welcome
-    if current_user.level_three_verified?
+    if T.must(current_user).level_three_verified?
       redirect_to page_path("welcome_level_three_verified")
-    elsif current_user.level_two_or_three_verified?
+    elsif T.must(current_user).level_two_or_three_verified?
       redirect_to page_path("welcome_level_two_verified")
     else
       redirect_to page_path("welcome_not_verified")
@@ -24,8 +27,9 @@ class WelcomeController < ApplicationController
 
   private
 
+    sig { void }
     def set_user_recommendations
-      @recommended_debates = Debate.recommendations(current_user).sort_by_recommendations.limit(3)
-      @recommended_proposals = Proposal.recommendations(current_user).sort_by_recommendations.limit(3)
+      @recommended_debates = Debate.recommendations(T.must(current_user)).sort_by_recommendations.limit(3)
+      @recommended_proposals = Proposal.recommendations(T.must(current_user)).sort_by_recommendations.limit(3)
     end
 end

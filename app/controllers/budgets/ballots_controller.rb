@@ -1,3 +1,4 @@
+# typed: true
 module Budgets
   class BallotsController < ApplicationController
     before_action :authenticate_user!
@@ -5,6 +6,7 @@ module Budgets
     authorize_resource :budget
     before_action :load_ballot
 
+    sig { void }
     def show
       authorize! :show, @ballot
       session[:ballot_referer] = request.referer
@@ -13,10 +15,12 @@ module Budgets
 
     private
 
+      sig { void }
       def load_budget
         @budget = Budget.find_by_slug_or_id! params[:budget_id]
       end
 
+      sig { void }
       def load_ballot
         query = Budget::Ballot.where(user: current_user, budget: @budget)
         @ballot = @budget.balloting? ? query.first_or_create! : query.first_or_initialize

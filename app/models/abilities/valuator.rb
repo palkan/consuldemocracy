@@ -1,9 +1,12 @@
+# typed: strict
 module Abilities
   class Valuator
+    extend T::Sig
     include CanCan::Ability
 
+    sig { params(user: User).void }
     def initialize(user)
-      valuator = user.valuator
+      valuator = T.must(user.valuator)
       assigned_investment_ids = valuator.assigned_investment_ids
 
       can [:read], Budget::Investment, id: assigned_investment_ids

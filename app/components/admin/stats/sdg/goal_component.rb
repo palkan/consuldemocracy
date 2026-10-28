@@ -1,14 +1,18 @@
+# typed: strict
 class Admin::Stats::SDG::GoalComponent < ApplicationComponent
   with_collection_parameter :goal
 
+  sig { returns(SDG::Goal) }
   attr_reader :goal
 
+  sig { params(goal: SDG::Goal).void }
   def initialize(goal:)
     @goal = goal
   end
 
   private
 
+    sig { returns(T::Array[[String, Integer]]) }
     def stats
       [
         [t("admin.stats.sdg.polls"), goal.polls.count],
@@ -17,6 +21,7 @@ class Admin::Stats::SDG::GoalComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T::Array[T.untyped]]) }
     def bugdets_stats
       Budget.order(created_at: :desc).map do |budget|
         [
@@ -28,22 +33,27 @@ class Admin::Stats::SDG::GoalComponent < ApplicationComponent
       end
     end
 
+    sig { params(budget: Budget).returns(Integer) }
     def sent(budget)
       investments(budget).count
     end
 
+    sig { params(budget: Budget).returns(Integer) }
     def winners(budget)
       investments(budget).winners.count
     end
 
+    sig { params(budget: Budget).returns(T.nilable(String)) }
     def amount(budget)
       number_to_currency(investments(budget).winners.sum(:price), precision: 0)
     end
 
+    sig { params(budget: Budget).returns(Budget::Investment::PrivateAssociationRelation) }
     def investments(budget)
-      goal.budget_investments.by_budget(budget)
+      T.cast(goal.budget_investments, Budget::Investment::PrivateCollectionProxy).by_budget(budget)
     end
 
+    sig { returns(T::Hash[Symbol, String]) }
     def featured
       { class: "featured" }
     end

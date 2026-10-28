@@ -1,3 +1,4 @@
+# typed: strict
 class Moderation::ProposalNotificationsController < Moderation::BaseController
   include ModerateActions
 
@@ -8,6 +9,7 @@ class Moderation::ProposalNotificationsController < Moderation::BaseController
 
   load_and_authorize_resource
 
+  sig { void }
   def hide
     resource.update!(moderated: true)
     respond_to do |format|
@@ -19,10 +21,12 @@ class Moderation::ProposalNotificationsController < Moderation::BaseController
 
   private
 
+    sig { returns(String) }
     def resource_name
       "proposal_notification"
     end
 
+    sig { override.returns(T.class_of(ProposalNotification)) }
     def resource_model
       ProposalNotification
     end

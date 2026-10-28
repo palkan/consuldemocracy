@@ -1,6 +1,8 @@
+# typed: strict
 class Users::ConfirmationsController < Devise::ConfirmationsController
   # POST /resource/confirmation
-  def create
+  sig { params("&": T.nilable(T.proc.params(resource: User).void)).void }
+  def create(&)
     self.resource = resource_class.send_confirmation_instructions(resource_params)
     yield resource if block_given?
 
@@ -14,6 +16,7 @@ class Users::ConfirmationsController < Devise::ConfirmationsController
 
   # new action, PATCH does not exist in the default Devise::ConfirmationsController
   # PATCH /resource/confirmation
+  sig { void }
   def update
     self.resource = resource_class.find_by!(confirmation_token: params[:confirmation_token])
 
@@ -40,7 +43,8 @@ class Users::ConfirmationsController < Devise::ConfirmationsController
   end
 
   # GET /resource/confirmation?confirmation_token=abcdef
-  def show
+  sig { params("&": T.nilable(T.proc.params(resource: User).void)).void }
+  def show(&)
     self.resource = resource_class.find_by!(confirmation_token: params[:confirmation_token])
 
     if confirmation_period_expired? || resource.encrypted_password.present?
@@ -54,20 +58,24 @@ class Users::ConfirmationsController < Devise::ConfirmationsController
 
   protected
 
+    sig { returns(ActionController::Parameters) }
     def resource_params
       params.require(resource_name).permit(allowed_params)
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def allowed_params
       [:password, :password_confirmation, :email]
     end
 
   private
 
+    sig { void }
     def set_official_position
       resource.add_official_position!(Setting["official_level_1_name"], 1)
     end
 
+    sig { returns(T.nilable(T::Boolean)) }
     def confirmation_period_expired?
       resource.send(:confirmation_period_expired?)
     end

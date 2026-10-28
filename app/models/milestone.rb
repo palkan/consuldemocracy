@@ -1,3 +1,4 @@
+# typed: strict
 class Milestone < ApplicationRecord
   include Imageable
   include Documentable
@@ -12,7 +13,7 @@ class Milestone < ApplicationRecord
 
   validates :milestoneable, presence: true
   validates :publication_date, presence: true
-  validates_translation :description, presence: true, unless: -> { status_id.present? }
+  validates_translation :description, presence: true, unless: ->(record) { record.status_id.present? }
 
   scope :order_by_publication_date, -> { order(publication_date: :asc, created_at: :asc) }
   scope :published,                 -> { where(publication_date: ..Date.current.end_of_day) }
@@ -21,6 +22,7 @@ class Milestone < ApplicationRecord
     where(milestoneable: [Proposal.public_for_api, Budget::Investment.public_for_api])
   end
 
+  sig { returns(Integer) }
   def self.title_max_length
     80
   end

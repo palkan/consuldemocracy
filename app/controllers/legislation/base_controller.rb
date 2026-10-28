@@ -1,3 +1,4 @@
+# typed: strict
 class Legislation::BaseController < ApplicationController
   include FeatureFlags
 

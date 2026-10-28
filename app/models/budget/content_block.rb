@@ -1,3 +1,4 @@
+# typed: strict
 class Budget
   class ContentBlock < ApplicationRecord
     validates :locale, presence: true, inclusion: { in: ->(*) { Setting.enabled_locales.map(&:to_s) }}

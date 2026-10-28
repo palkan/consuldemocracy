@@ -1,3 +1,4 @@
+# typed: true
 class Admin::Legislation::ProcessesController < Admin::Legislation::BaseController
   include Translatable
   include ImageAttributes
@@ -7,12 +8,14 @@ class Admin::Legislation::ProcessesController < Admin::Legislation::BaseControll
 
   load_and_authorize_resource :process, class: "Legislation::Process"
 
+  sig { void }
   def index
     @processes = ::Legislation::Process.send(@current_filter)
                                        .order(start_date: :desc)
                                        .page(params[:page])
   end
 
+  sig { void }
   def create
     if @process.save
       link = legislation_process_path(@process)
@@ -24,6 +27,7 @@ class Admin::Legislation::ProcessesController < Admin::Legislation::BaseControll
     end
   end
 
+  sig { void }
   def update
     if @process.update(process_params)
       link = legislation_process_path(@process)
@@ -34,6 +38,7 @@ class Admin::Legislation::ProcessesController < Admin::Legislation::BaseControll
     end
   end
 
+  sig { void }
   def destroy
     @process.destroy!
     notice = t("admin.legislation.processes.destroy.notice")
@@ -42,10 +47,12 @@ class Admin::Legislation::ProcessesController < Admin::Legislation::BaseControll
 
   private
 
+    sig { returns(ActionController::Parameters) }
     def process_params
       params.require(:legislation_process).permit(allowed_params)
     end
 
+    sig { returns(T::Array[T.any(Symbol, T::Hash[Symbol, T.untyped])]) }
     def allowed_params
       [
         :start_date,

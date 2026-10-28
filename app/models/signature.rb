@@ -1,3 +1,4 @@
+# typed: strict
 class Signature < ApplicationRecord
   belongs_to :signature_sheet
   belongs_to :user
@@ -14,6 +15,7 @@ class Signature < ApplicationRecord
 
   delegate :signable, to: :signature_sheet
 
+  sig { void }
   def verify
     if user_exists?
       assign_vote_to_user
@@ -25,8 +27,10 @@ class Signature < ApplicationRecord
     end
   end
 
+  sig { void }
   def assign_vote_to_user
     set_user
+    user = T.must(self.user)
     user.with_lock do
       if signable.is_a? Budget::Investment
         if [nil, :no_selecting_allowed].include?(signable.reason_for_not_being_selectable_by(user))
@@ -40,26 +44,30 @@ class Signature < ApplicationRecord
     end
   end
 
+  sig { void }
   def assign_signature_to_vote
     vote = Vote.find_by(votable: signable, voter: user)
     vote&.update!(signature: self)
   end
 
+  sig { returns(T::Boolean) }
   def user_exists?
     User.where(document_number: document_number).any?
   end
 
+  sig { returns(User) }
   def create_user
     user_params = { document_number: document_number, created_from_signature: true }
 
     User.create_from_census_response!(@census_api_response, user_params)
   end
 
+  sig { returns(T::Boolean) }
   def in_census?
     document_types.find do |document_type|
       response = CensusCaller.new.call(document_type, document_number, date_of_birth, postal_code)
       if response.valid?
-        @census_api_response = response
+        @census_api_response = T.let(response, T.untyped)
         true
       else
         false
@@ -69,15 +77,18 @@ class Signature < ApplicationRecord
     @census_api_response.present?
   end
 
+  sig { returns(T::Boolean) }
   def set_user
     user = User.find_by(document_number: document_number)
     update(user: user)
   end
 
+  sig { returns(T::Boolean) }
   def mark_as_verified
     update(verified: true)
   end
 
+  sig { returns(T::Array[String]) }
   def document_types
     %w[1 2 3 4]
   end

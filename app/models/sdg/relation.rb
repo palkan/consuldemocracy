@@ -1,3 +1,4 @@
+# typed: strict
 class SDG::Relation < ApplicationRecord
   validates :related_sdg_id, uniqueness: { scope: [:related_sdg_type, :relatable_id, :relatable_type] }
 

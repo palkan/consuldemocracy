@@ -1,3 +1,4 @@
+# typed: strict
 class Notification < ApplicationRecord
   belongs_to :user, counter_cache: true
   belongs_to :notifiable, polymorphic: true
@@ -13,26 +14,32 @@ class Notification < ApplicationRecord
   delegate :notifiable_title, :notifiable_body, :notifiable_available?, :linkable_resource,
            to: :notifiable, allow_nil: true
 
+  sig { returns(T::Boolean) }
   def mark_as_read
     update(read_at: Time.current)
   end
 
+  sig { returns(T::Boolean) }
   def mark_as_unread
     update(read_at: nil)
   end
 
+  sig { returns(T::Boolean) }
   def read?
     read_at.present?
   end
 
+  sig { returns(T::Boolean) }
   def unread?
     read_at.nil?
   end
 
+  sig { returns(ActiveSupport::TimeWithZone) }
   def timestamp
     notifiable.created_at
   end
 
+  sig { params(user: User, notifiable: ActiveRecord::Base).returns(T.any(Integer, Notification)) }
   def self.add(user, notifiable)
     notification = Notification.existent(user, notifiable)
     if notification.present?
@@ -42,10 +49,12 @@ class Notification < ApplicationRecord
     end
   end
 
+  sig { params(user: User, notifiable: ActiveRecord::Base).returns(T.nilable(Notification)) }
   def self.existent(user, notifiable)
     unread.find_by(user: user, notifiable: notifiable)
   end
 
+  sig { returns(T.nilable(String)) }
   def notifiable_action
     case notifiable_type
     when "ProposalNotification"
@@ -59,6 +68,7 @@ class Notification < ApplicationRecord
     end
   end
 
+  sig { returns(T.nilable(Notification)) }
   def link
     if notifiable.is_a?(AdminNotification) && notifiable.link.blank?
       nil
@@ -67,8 +77,9 @@ class Notification < ApplicationRecord
     end
   end
 
+  sig { void }
   def self.send_pending
-    run_at = first_batch_run_at
+    run_at = T.let(first_batch_run_at, ActiveSupport::TimeWithZone)
     User.email_digest.find_in_batches(batch_size: batch_size) do |users|
       users.each do |user|
         email_digest = EmailDigest.new(user)
@@ -80,14 +91,17 @@ class Notification < ApplicationRecord
 
   private
 
+    sig { returns(Integer) }
     def self.batch_size
       10000
     end
 
+    sig { returns(ActiveSupport::Duration) }
     def self.batch_interval
       20.minutes
     end
 
+    sig { returns(ActiveSupport::TimeWithZone) }
     def self.first_batch_run_at
       Time.current
     end

@@ -1,3 +1,4 @@
+# typed: true
 class Legislation::ProcessesController < Legislation::BaseController
   include RandomSeed
 
@@ -8,6 +9,7 @@ class Legislation::ProcessesController < Legislation::BaseController
 
   before_action :set_random_seed, only: :proposals
 
+  sig { void }
   def index
     @current_filter ||= "open"
     @processes = ::Legislation::Process.send(@current_filter)
@@ -17,6 +19,7 @@ class Legislation::ProcessesController < Legislation::BaseController
                                        .page(params[:page])
   end
 
+  sig { void }
   def show
     draft_version = @process.draft_versions.published.last
     allegations_phase = @process.allegations_phase
@@ -34,6 +37,7 @@ class Legislation::ProcessesController < Legislation::BaseController
     end
   end
 
+  sig { void }
   def debate
     set_process
     @phase = :debate_phase
@@ -45,6 +49,7 @@ class Legislation::ProcessesController < Legislation::BaseController
     end
   end
 
+  sig { void }
   def draft_publication
     set_process
     @phase = :draft_publication
@@ -62,6 +67,7 @@ class Legislation::ProcessesController < Legislation::BaseController
     end
   end
 
+  sig { void }
   def allegations
     set_process
     @phase = :allegations_phase
@@ -79,6 +85,7 @@ class Legislation::ProcessesController < Legislation::BaseController
     end
   end
 
+  sig { void }
   def result_publication
     set_process
     @phase = :result_publication
@@ -96,10 +103,12 @@ class Legislation::ProcessesController < Legislation::BaseController
     end
   end
 
+  sig { void }
   def milestones
     @phase = :milestones
   end
 
+  sig { void }
   def summary
     @phase = :summary
     @proposals = @process.proposals.selected
@@ -111,6 +120,7 @@ class Legislation::ProcessesController < Legislation::BaseController
     end
   end
 
+  sig { void }
   def proposals
     set_process
     @phase = :proposals_phase
@@ -135,10 +145,12 @@ class Legislation::ProcessesController < Legislation::BaseController
 
   private
 
+    sig { returns(T::Boolean) }
     def member_method?
       params[:id].present?
     end
 
+    sig { void }
     def set_process
       return if member_method?
 

@@ -1,3 +1,4 @@
+# typed: strict
 class Moderation::Budgets::InvestmentsController < Moderation::BaseController
   include FeatureFlags
   include ModerateActions
@@ -13,10 +14,12 @@ class Moderation::Budgets::InvestmentsController < Moderation::BaseController
 
   private
 
+    sig { returns(String) }
     def resource_name
       "budget_investment"
     end
 
+    sig { override.returns(T.class_of(Budget::Investment)) }
     def resource_model
       Budget::Investment
     end

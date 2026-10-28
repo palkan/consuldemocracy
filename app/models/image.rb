@@ -1,6 +1,8 @@
+# typed: strict
 class Image < ApplicationRecord
   include Attachable
 
+  sig { returns(T::Hash[Symbol, T::Hash[Symbol, String]]) }
   def self.styles
     {
       large: { resize: "x#{Setting["uploads.images.min_height"]}" },
@@ -15,33 +17,43 @@ class Image < ApplicationRecord
   validates :title, presence: true
   validate :validate_title_length
   validates :user_id, presence: true
-  validates :imageable_id, presence: true,         if: -> { persisted? }
-  validates :imageable_type, presence: true,       if: -> { persisted? }
-  validate :validate_image_dimensions, if: -> { attachment.attached? && attachment.new_record? }
+  validates :imageable_id, presence: true,         if: :persisted?
+  validates :imageable_type, presence: true,       if: :persisted?
+  validate :validate_image_dimensions,
+           if: ->(image) { image.attachment.attached? && image.attachment.new_record? }
 
+  sig { returns(Integer) }
   def self.max_file_size
     Setting["uploads.images.max_size"].to_i
   end
 
+  sig { returns(T::Array[String]) }
   def self.accepted_content_types
     Setting["uploads.images.content_types"]&.split || ["image/jpeg"]
   end
 
+  sig { returns(String) }
   def self.humanized_accepted_content_types
     Setting.accepted_content_types_for("images").join(", ")
   end
 
+  sig { returns(Integer) }
   def max_file_size
     self.class.max_file_size
   end
 
+  sig { returns(T::Array[String]) }
   def accepted_content_types
     self.class.accepted_content_types
   end
 
+  sig do
+    params(style: T.nilable(Symbol))
+      .returns(T.any(ActiveStorage::Variant, ActiveStorage::VariantWithRecord))
+  end
   def variant(style)
     if style
-      attachment.variant(self.class.styles[style].merge(strip: true))
+      attachment.variant(T.must(self.class.styles[style]).merge(strip: true))
     else
       attachment.variant(strip: true)
     end
@@ -49,14 +61,17 @@ class Image < ApplicationRecord
 
   private
 
+    sig { returns(Symbol) }
     def association_name
       :imageable
     end
 
+    sig { returns(T.nilable(T.class_of(ApplicationRecord))) }
     def imageable_class
       association_class
     end
 
+    sig { void }
     def validate_image_dimensions
       if accepted_content_types.include?(attachment_content_type)
         return true if imageable_class == Widget::Card
@@ -75,8 +90,9 @@ class Image < ApplicationRecord
       end
     end
 
+    sig { void }
     def validate_title_length
-      if title.present?
+      if (title = self.title).present?
         title_min_length = Setting["uploads.images.title.min_length"].to_i
         title_max_length = Setting["uploads.images.title.max_length"].to_i
 

@@ -1,4 +1,6 @@
+# typed: strict
 class Admin::Settings::SDGConfigurationTabComponent < ApplicationComponent
+  sig { returns(T::Array[String]) }
   def settings
     %w[
       sdg.process.debates

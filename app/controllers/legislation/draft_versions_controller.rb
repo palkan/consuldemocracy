@@ -1,20 +1,25 @@
+# typed: true
 class Legislation::DraftVersionsController < Legislation::BaseController
   load_and_authorize_resource :process
   load_and_authorize_resource :draft_version, through: :process
 
+  sig { void }
   def index
   end
 
+  sig { void }
   def show
     @draft_versions_list = visible_draft_versions
     @draft_version = @draft_versions_list.find(params[:id])
   end
 
+  sig { void }
   def changes
     @draft_versions_list = visible_draft_versions
     @draft_version = @draft_versions_list.find(params[:draft_version_id])
   end
 
+  sig { void }
   def go_to_version
     version = visible_draft_versions.find(params[:draft_version_id])
 
@@ -29,6 +34,10 @@ class Legislation::DraftVersionsController < Legislation::BaseController
 
   private
 
+    sig do
+      returns(T.any(Legislation::DraftVersion::PrivateCollectionProxy,
+                    Legislation::DraftVersion::PrivateAssociationRelation))
+    end
     def visible_draft_versions
       if current_user&.administrator?
         @process.draft_versions

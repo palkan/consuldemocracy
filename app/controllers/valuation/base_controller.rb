@@ -1,3 +1,4 @@
+# typed: strict
 class Valuation::BaseController < ApplicationController
   layout "admin"
 
@@ -8,6 +9,7 @@ class Valuation::BaseController < ApplicationController
 
   private
 
+    sig { void }
     def verify_valuator
       raise CanCan::AccessDenied unless current_user&.valuator? || current_user&.administrator?
     end

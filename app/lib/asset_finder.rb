@@ -1,4 +1,8 @@
+# typed: strict
 class AssetFinder
+  extend T::Sig
+
+  sig { params(path: String).returns(T.untyped) }
   def self.find_asset(path)
     if Rails.application.assets
       Rails.application.assets.find_asset(path)

@@ -1,3 +1,4 @@
+# typed: true
 class Admin::Widget::CardsController < Admin::BaseController
   include Admin::Widget::CardsActions
 
@@ -5,6 +6,8 @@ class Admin::Widget::CardsController < Admin::BaseController
   helper_method :index_path
 
   private
+
+    sig { override.returns(String) }
 
     def index_path
       admin_homepage_path

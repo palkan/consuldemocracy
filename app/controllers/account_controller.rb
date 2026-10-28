@@ -1,11 +1,14 @@
+# typed: true
 class AccountController < ApplicationController
   before_action :authenticate_user!
   before_action :set_account
   load_and_authorize_resource class: "User"
 
+  sig { void }
   def show
   end
 
+  sig { void }
   def update
     if @account.update(account_params)
       redirect_to account_path, notice: t("flash.actions.save_changes.notice")
@@ -17,14 +20,17 @@ class AccountController < ApplicationController
 
   private
 
+    sig { void }
     def set_account
       @account = current_user
     end
 
+    sig { returns(ActionController::Parameters) }
     def account_params
       params.require(:account).permit(allowed_params)
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def allowed_params
       if @account.organization?
         [:phone_number, :email_on_comment, :email_on_comment_reply, :newsletter,

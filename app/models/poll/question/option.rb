@@ -1,3 +1,4 @@
+# typed: strict
 class Poll::Question::Option < ApplicationRecord
   self.table_name = "poll_question_answers"
 
@@ -29,24 +30,30 @@ class Poll::Question::Option < ApplicationRecord
       .where.missing(:videos)
   end
 
+  sig { params(ordered_array: T::Array[T.any(Integer, String)]).void }
   def self.order_options(ordered_array)
     ordered_array.each_with_index do |option_id, order|
       find(option_id).update_column(:given_order, order + 1)
     end
   end
 
+  sig { params(question_id: T.nilable(Integer)).returns(Integer) }
   def self.last_position(question_id)
     where(question_id: question_id).maximum("given_order") || 0
   end
 
+  sig { returns(Integer) }
   def total_votes
-    answers.count + partial_results.sum(:amount)
+    answers.count + T.cast(partial_results.sum(:amount), Integer)
   end
 
+  sig { returns(T.any(Integer, Float)) }
   def total_votes_percentage
+    question = T.must(self.question)
     question.options_total_votes.zero? ? 0 : (total_votes * 100.0) / question.options_total_votes
   end
 
+  sig { returns(T::Boolean) }
   def with_read_more?
     description.present? || images.any? || documents.any? || videos.any?
   end

@@ -1,3 +1,4 @@
+# typed: strict
 module Types
   class ProposalType < Types::BaseObject
     field :cached_votes_up, Integer, null: true
@@ -22,10 +23,12 @@ module Types
     collection_field :votes_for, Types::VoteType, null: true
     collection_field :milestones, Types::MilestoneType, null: true
 
+    sig { returns(ActsAsTaggableOn::Tag::PrivateAssociationRelation) }
     def tags
       object.tags.public_for_api
     end
 
+    sig { returns(T.nilable(Geozone)) }
     def geozone
       Geozone.public_for_api.find_by(id: object.geozone)
     end

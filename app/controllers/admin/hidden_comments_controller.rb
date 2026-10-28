@@ -1,17 +1,21 @@
+# typed: true
 class Admin::HiddenCommentsController < Admin::BaseController
   include Admin::HiddenContent
 
   before_action :load_comment, only: [:confirm_hide, :restore]
 
+  sig { void }
   def index
     @comments = hidden_content(Comment.not_valuations).with_visible_author
   end
 
+  sig { void }
   def confirm_hide
     @comment.confirm_hide
     redirect_with_query_params_to(action: :index)
   end
 
+  sig { void }
   def restore
     @comment.restore(recursive: true)
     @comment.ignore_flag
@@ -21,6 +25,7 @@ class Admin::HiddenCommentsController < Admin::BaseController
 
   private
 
+    sig { void }
     def load_comment
       @comment = Comment.not_valuations.with_hidden.find(params[:id])
     end

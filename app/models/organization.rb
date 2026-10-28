@@ -1,3 +1,4 @@
+# typed: strict
 class Organization < ApplicationRecord
   include Graphqlable
 
@@ -20,22 +21,31 @@ class Organization < ApplicationRecord
          .where("(organizations.verified_at IS NULL or organizations.verified_at < rejected_at)")
   end
 
+  sig { returns(T::Boolean) }
   def verify
     update(verified_at: Time.current)
   end
 
+  sig { returns(T::Boolean) }
   def reject
     update(rejected_at: Time.current)
   end
 
+  sig { returns(T::Boolean) }
   def verified?
-    verified_at.present? && (rejected_at.blank? || rejected_at < verified_at)
+    verified_at = self.verified_at
+    rejected_at = self.rejected_at
+    !verified_at.nil? && (rejected_at.nil? || rejected_at < verified_at)
   end
 
+  sig { returns(T::Boolean) }
   def rejected?
-    rejected_at.present? && (verified_at.blank? || verified_at < rejected_at)
+    verified_at = self.verified_at
+    rejected_at = self.rejected_at
+    !rejected_at.nil? && (verified_at.nil? || verified_at < rejected_at)
   end
 
+  sig { params(text: T.nilable(String)).returns(Organization::PrivateRelation) }
   def self.search(text)
     if text.present?
       joins(:user).where("users.email = ? OR users.phone_number = ? OR organizations.name ILIKE ?",
@@ -45,16 +55,22 @@ class Organization < ApplicationRecord
     end
   end
 
+  sig { returns(Integer) }
   def self.name_max_length
-    @name_max_length ||= columns.find { |c| c.name == "name" }.limit || 60
+    @name_max_length ||= T.let(columns.find { |c| c.name == "name" }.limit || 60, T.nilable(Integer))
   end
 
+  sig { returns(Integer) }
   def self.responsible_name_max_length
-    @responsible_name_max_length ||= columns.find { |c| c.name == "responsible_name" }.limit || 60
+    @responsible_name_max_length ||= T.let(
+      columns.find { |c| c.name == "responsible_name" }.limit || 60,
+      T.nilable(Integer)
+    )
   end
 
   private
 
+    sig { void }
     def validate_name_length
       validator = ActiveModel::Validations::LengthValidator.new(
         attributes: :name,
@@ -63,6 +79,7 @@ class Organization < ApplicationRecord
       validator.validate(self)
     end
 
+    sig { void }
     def validate_responsible_name_length
       validator = ActiveModel::Validations::LengthValidator.new(
         attributes: :responsible_name,

@@ -1,3 +1,4 @@
+# typed: true
 class Admin::SiteCustomization::ContentBlocksController < Admin::SiteCustomization::BaseController
   load_and_authorize_resource :content_block, class: "SiteCustomization::ContentBlock",
                                               except: [
@@ -6,14 +7,17 @@ class Admin::SiteCustomization::ContentBlocksController < Admin::SiteCustomizati
                                                 :update_heading_content_block
                                               ]
 
+  sig { void }
   def index
     @content_blocks = SiteCustomization::ContentBlock.order(:name, :locale)
     @headings_content_blocks = Budget::ContentBlock.all
   end
 
+  sig { void }
   def new
   end
 
+  sig { void }
   def create
     if is_heading_content_block?(@content_block.name)
       heading_content_block = new_heading_content_block
@@ -33,9 +37,11 @@ class Admin::SiteCustomization::ContentBlocksController < Admin::SiteCustomizati
     end
   end
 
+  sig { void }
   def edit
   end
 
+  sig { void }
   def update
     if is_heading_content_block?(params[:site_customization_content_block][:name])
       heading_content_block = new_heading_content_block
@@ -56,24 +62,28 @@ class Admin::SiteCustomization::ContentBlocksController < Admin::SiteCustomizati
     end
   end
 
+  sig { void }
   def destroy
     @content_block.destroy!
     notice = t("admin.site_customization.content_blocks.destroy.notice")
     redirect_to admin_site_customization_content_blocks_path, notice: notice
   end
 
+  sig { void }
   def delete_heading_content_block
     Budget::ContentBlock.find(params[:id]).destroy!
     notice = t("admin.site_customization.content_blocks.destroy.notice")
     redirect_to admin_site_customization_content_blocks_path, notice: notice
   end
 
+  sig { void }
   def edit_heading_content_block
     @content_block = Budget::ContentBlock.find(params[:id])
     @is_heading_content_block = true
     render :edit
   end
 
+  sig { void }
   def update_heading_content_block
     heading_content_block = Budget::ContentBlock.find(params[:id])
     if is_heading_content_block?(params[:name])
@@ -104,17 +114,23 @@ class Admin::SiteCustomization::ContentBlocksController < Admin::SiteCustomizati
 
   private
 
+    sig { returns(ActionController::Parameters) }
     def content_block_params
       params.require(:site_customization_content_block).permit(allowed_params)
     end
 
+    sig { returns(T::Array[T.any(Symbol, T::Hash[Symbol, T.untyped])]) }
     def allowed_params
       [:name, :locale, :body]
     end
 
+    sig { params(name: String).returns(T::Boolean) }
+
     def is_heading_content_block?(name)
       name.start_with?("hcb_")
     end
+
+    sig { returns(Budget::ContentBlock) }
 
     def new_heading_content_block
       heading_content_block = Budget::ContentBlock.new

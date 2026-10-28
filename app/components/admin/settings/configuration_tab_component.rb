@@ -1,4 +1,6 @@
+# typed: strict
 class Admin::Settings::ConfigurationTabComponent < ApplicationComponent
+  sig { returns(T::Array[String]) }
   def settings
     %w[
       official_level_1_name

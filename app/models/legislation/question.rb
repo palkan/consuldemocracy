@@ -1,3 +1,4 @@
+# typed: strict
 class Legislation::Question < ApplicationRecord
   acts_as_paranoid column: :hidden_at
   include ActsAsParanoidAliases
@@ -29,30 +30,38 @@ class Legislation::Question < ApplicationRecord
 
   scope :sorted, -> { order(:id) }
 
+  sig { returns(T.nilable(Integer)) }
   def next_question_id
-    @next_question_id ||= process.questions.where("id > ?", id).sorted.limit(1).ids.first
+    @next_question_id ||= T.let(T.must(process).questions.where("id > ?", id).sorted.limit(1).ids.first,
+                                T.nilable(Integer))
   end
 
+  sig { returns(T.nilable(Integer)) }
   def first_question_id
-    @first_question_id ||= process.questions.sorted.limit(1).ids.first
+    @first_question_id ||= T.let(T.must(process).questions.sorted.limit(1).ids.first, T.nilable(Integer))
   end
 
+  sig { params(user: T.nilable(User)).returns(T.nilable(Legislation::Answer)) }
   def answer_for_user(user)
     answers.find_by(user: user)
   end
 
+  sig { returns(T::Boolean) }
   def comments_for_verified_residents_only?
     true
   end
 
+  sig { returns(T::Boolean) }
   def comments_closed?
     !comments_open?
   end
 
+  sig { returns(T.nilable(T::Boolean)) }
   def comments_open?
-    process.debate_phase.open?
+    T.must(process).debate_phase.open?
   end
 
+  sig { returns(Comment::PrivateAssociationRelation) }
   def best_comments
     comments.sort_by_supports.limit(3)
   end

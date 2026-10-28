@@ -1,5 +1,6 @@
+# typed: strict
 class RelatedContent < ApplicationRecord
-  RELATED_CONTENT_SCORE_THRESHOLD = Setting["related_content_score_threshold"].to_f
+  RELATED_CONTENT_SCORE_THRESHOLD = T.let(Setting["related_content_score_threshold"].to_f, Float)
   RELATIONABLE_MODELS = %w[proposals debates budgets investments].freeze
 
   acts_as_paranoid column: :hidden_at
@@ -17,7 +18,8 @@ class RelatedContent < ApplicationRecord
             }
   validate :different_parent_and_child
 
-  after_create :create_opposite_related_content, unless: proc { opposite_related_content.present? }
+  after_create :create_opposite_related_content,
+               unless: proc { T.bind(self, RelatedContent).opposite_related_content.present? }
   after_create :create_author_score
 
   scope :not_hidden, -> { where(hidden_at: nil) }
@@ -30,34 +32,41 @@ class RelatedContent < ApplicationRecord
     where(parent_relationable_type: "Budget::Investment", child_relationable_type: "Budget::Investment")
   end
 
+  sig { params(user: T.nilable(User)).void }
   def score_positive(user)
     score(RelatedContentScore::SCORES[:POSITIVE], user)
   end
 
+  sig { params(user: T.nilable(User)).void }
   def score_negative(user)
     score(RelatedContentScore::SCORES[:NEGATIVE], user)
   end
 
+  sig { params(user: User).returns(T::Boolean) }
   def scored_by_user?(user)
     related_content_scores.exists?(user: user)
   end
 
+  sig { returns(T::Boolean) }
   def same_parent_and_child?
     parent_relationable == child_relationable
   end
 
+  sig { returns(T::Boolean) }
   def duplicate?
     parent_relationable.relationed_contents.include?(child_relationable)
   end
 
   private
 
+    sig { void }
     def different_parent_and_child
       if same_parent_and_child?
         errors.add(:parent_relationable, :itself)
       end
     end
 
+    sig { void }
     def create_opposite_related_content
       related_content = RelatedContent.create!(opposite_related_content: self,
                                                parent_relationable: child_relationable,
@@ -67,23 +76,29 @@ class RelatedContent < ApplicationRecord
       self.opposite_related_content = related_content
     end
 
+    sig { params(value: Integer, user: T.nilable(User)).void }
     def score(value, user)
       score_with_opposite(value, user)
 
-      if (related_content_scores.sum(:value) / related_content_scores_count) < RELATED_CONTENT_SCORE_THRESHOLD
+      scores_count = T.must(related_content_scores_count)
+
+      if (related_content_scores.sum(:value) / scores_count) < RELATED_CONTENT_SCORE_THRESHOLD
         hide_with_opposite
       end
     end
 
+    sig { void }
     def hide_with_opposite
       hide
-      opposite_related_content.hide
+      T.must(opposite_related_content).hide
     end
 
+    sig { void }
     def create_author_score
       score_positive(author)
     end
 
+    sig { params(value: Integer, user: T.nilable(User)).void }
     def score_with_opposite(value, user)
       RelatedContentScore.create(user: user, related_content: self, value: value)
       RelatedContentScore.create(user: user, related_content: opposite_related_content, value: value)

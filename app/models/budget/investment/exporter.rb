@@ -1,19 +1,25 @@
+# typed: strict
 class Budget::Investment::Exporter
   include CsvExporter
   include JsonExporter
+  extend T::Sig
 
+  sig { returns(T::Enumerable[Budget::Investment]) }
   attr_reader :records
 
+  sig { params(investments: T::Enumerable[Budget::Investment]).void }
   def initialize(investments)
     @records = investments
   end
 
+  sig { returns(T.class_of(Budget::Investment)) }
   def model
     Budget::Investment
   end
 
   private
 
+    sig { returns(T::Array[String]) }
     def model_headers
       [
         I18n.t("admin.budget_investments.index.list.id"),
@@ -32,6 +38,7 @@ class Budget::Investment::Exporter
       ]
     end
 
+    sig { params(investment: Budget::Investment).returns(T::Array[T.nilable(String)]) }
     def record_csv_values(investment)
       [
         investment.id.to_s,
@@ -40,24 +47,26 @@ class Budget::Investment::Exporter
         admin(investment),
         investment.assigned_valuators || "-",
         investment.assigned_valuation_groups || "-",
-        investment.heading.name,
+        T.must(investment.heading).name,
         price(investment),
         investment.valuation_finished? ? I18n.t("shared.yes") : I18n.t("shared.no"),
         investment.selected? ? I18n.t("shared.yes") : I18n.t("shared.no"),
         investment.visible_to_valuators? ? I18n.t("shared.yes") : I18n.t("shared.no"),
-        investment.author.username,
+        T.must(investment.author).username,
         I18n.l(investment.created_at, format: :datetime)
       ]
     end
 
+    sig { params(investment: Budget::Investment).returns(T.nilable(String)) }
     def admin(investment)
-      if investment.administrator.present?
-        investment.administrator.name
+      if (administrator = investment.administrator).present?
+        administrator.name
       else
         I18n.t("admin.budget_investments.index.no_admin_assigned")
       end
     end
 
+    sig { params(investment: Budget::Investment).returns(String) }
     def price(investment)
       price_string = "admin.budget_investments.index.feasibility.#{investment.feasibility}"
       if investment.feasible?
@@ -67,6 +76,7 @@ class Budget::Investment::Exporter
       end
     end
 
+    sig { params(investment: Budget::Investment).returns(T::Hash[Symbol, T.nilable(T.any(Integer, String))]) }
     def json_values(investment)
       {
         id: investment.id,

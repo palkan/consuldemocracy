@@ -1,3 +1,4 @@
+# typed: strict
 class Moderation::DebatesController < Moderation::BaseController
   include ModerateActions
   include FeatureFlags
@@ -13,6 +14,7 @@ class Moderation::DebatesController < Moderation::BaseController
 
   private
 
+    sig { override.returns(T.class_of(Debate)) }
     def resource_model
       Debate
     end

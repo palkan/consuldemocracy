@@ -1,4 +1,7 @@
+# typed: strict
 class ApplicationController < ActionController::Base
+  extend T::Sig
+
   include TenantVariants
   include GlobalizeFallbacks
   include HasFilters
@@ -22,34 +25,40 @@ class ApplicationController < ActionController::Base
 
   private
 
+    sig { void }
     def authenticate_http_basic
       authenticate_or_request_with_http_basic do |username, password|
-        username == Tenant.current_secrets.http_basic_username &&
-          password == Tenant.current_secrets.http_basic_password
+        username == Tenant.current_secrets[:http_basic_username] &&
+          password == Tenant.current_secrets[:http_basic_password]
       end
     end
 
+    sig { returns(T.untyped) }
     def http_basic_auth_site?
-      Tenant.current_secrets.http_basic_auth
+      Tenant.current_secrets[:http_basic_auth]
     end
 
+    sig { void }
     def verify_lock
-      if current_user.locked?
+      if T.must(current_user).locked?
         redirect_to account_path, alert: t("verification.alert.lock")
       end
     end
 
+    sig { params(action: T.proc.void).void }
     def switch_locale(&action)
       locale = current_locale
 
-      if current_user && current_user.locale != locale.to_s
-        current_user.update(locale: locale)
+      user = current_user
+      if user && user.locale != locale.to_s
+        user.update(locale: locale)
       end
 
       session[:locale] = locale.to_s
       I18n.with_locale(locale, &action)
     end
 
+    sig { returns(T.any(String, Symbol)) }
     def current_locale
       if Setting.enabled_locales.include?(params[:locale]&.to_sym)
         params[:locale]
@@ -60,6 +69,7 @@ class ApplicationController < ActionController::Base
       end
     end
 
+    sig { returns(String) }
     def set_layout
       if devise_controller?
         "devise"
@@ -68,38 +78,45 @@ class ApplicationController < ActionController::Base
       end
     end
 
+    sig { void }
     def ensure_signup_complete
-      if user_signed_in? && !devise_controller? && current_user.registering_with_oauth
+      if user_signed_in? && !devise_controller? && T.must(current_user).registering_with_oauth
         redirect_to finish_signup_path
       end
     end
 
+    sig { void }
     def verify_resident!
-      unless current_user.residence_verified?
+      unless T.must(current_user).residence_verified?
         redirect_to new_residence_path, alert: t("verification.residence.alert.unconfirmed_residency")
       end
     end
 
+    sig { void }
     def verify_verified!
-      if current_user.level_three_verified?
+      if T.must(current_user).level_three_verified?
         redirect_to(account_path, notice: t("verification.redirect_notices.already_verified"))
       end
     end
 
+    sig { void }
     def set_return_url
       if request.get? && !devise_controller? && is_navigational_format?
         store_location_for(:user, request.fullpath)
       end
     end
 
+    sig { returns(T.nilable(Budget)) }
     def current_budget
       Budget.current
     end
 
+    sig { params(options: T::Hash[Symbol, T.untyped], response_status: T::Hash[Symbol, T.untyped]).void }
     def redirect_with_query_params_to(options, response_status = {})
       redirect_to path_with_query_params(options), response_status
     end
 
+    sig { params(options: T::Hash[Symbol, T.untyped]).returns(String) }
     def path_with_query_params(options)
       path_options = { controller: params[:controller] }.merge(options).merge(only_path: true)
       url_for(request.query_parameters.merge(path_options))

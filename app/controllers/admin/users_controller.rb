@@ -1,8 +1,10 @@
+# typed: true
 class Admin::UsersController < Admin::BaseController
   load_and_authorize_resource
 
   has_filters %w[active erased], only: :index
 
+  sig { void }
   def index
     @users = @users.send(@current_filter)
     @users = @users.by_username_email_or_document_number(params[:search]) if params[:search]

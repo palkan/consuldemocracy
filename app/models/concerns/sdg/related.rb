@@ -1,15 +1,20 @@
+# typed: strict
 module SDG::Related
   extend ActiveSupport::Concern
+  extend T::Helpers
+  extend T::Sig
   include Comparable
 
-  RELATABLE_TYPES = %w[
+  requires_ancestor { ApplicationRecord }
+
+  RELATABLE_TYPES = T.let(%w[
     Budget::Investment
     Debate
     Legislation::Process
     Legislation::Proposal
     Poll
     Proposal
-  ].freeze
+  ].freeze, T::Array[String])
 
   included do
     has_many :relations, as: :related_sdg, dependent: :destroy
@@ -22,16 +27,19 @@ module SDG::Related
     end
   end
 
+  sig { returns(T::Array[T.untyped]) }
   def relatables
     relations.map(&:relatable)
   end
 
+  sig { params(goal_or_target: Object).returns(T.nilable(Integer)) }
   def <=>(goal_or_target)
     if goal_or_target.class.ancestors.include?(SDG::Related)
-      subcodes <=> goal_or_target.subcodes
+      subcodes <=> T.cast(goal_or_target, SDG::Related).subcodes
     end
   end
 
+  sig { returns(T::Array[Integer]) }
   def subcodes
     code.to_s.split(".").map do |subcode|
       if subcode.to_i.positive?
@@ -42,6 +50,7 @@ module SDG::Related
     end
   end
 
+  sig { returns(String) }
   def code_and_title
     "#{code}. #{title}"
   end

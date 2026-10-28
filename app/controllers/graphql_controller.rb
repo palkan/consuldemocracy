@@ -1,3 +1,4 @@
+# typed: strict
 class GraphqlController < ApplicationController
   include FeatureFlags
 
@@ -8,11 +9,13 @@ class GraphqlController < ApplicationController
 
   class QueryStringError < StandardError; end
 
+  sig { void }
   def execute
-    raise GraphqlController::QueryStringError if query_string.nil?
+    query = query_string
+    raise GraphqlController::QueryStringError if query.nil?
 
     result = ConsulSchema.execute(
-      query_string,
+      query,
       variables: prepare_variables,
       context: {},
       operation_name: params[:operationName]
@@ -30,6 +33,7 @@ class GraphqlController < ApplicationController
 
   private
 
+    sig { returns(T.nilable(String)) }
     def query_string
       if request.headers["CONTENT_TYPE"] == "application/graphql"
         request.body.string
@@ -39,6 +43,7 @@ class GraphqlController < ApplicationController
     end
 
     # Handle variables in URL query string and JSON body
+    sig { returns(T.untyped) }
     def prepare_variables
       case variables_param = params[:variables]
       # URL query string

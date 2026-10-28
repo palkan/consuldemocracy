@@ -1,19 +1,25 @@
+# typed: strict
 class Proposal::Exporter
   include CsvExporter
   include JsonExporter
+  extend T::Sig
 
+  sig { returns(T::Enumerable[Proposal]) }
   attr_reader :records
 
+  sig { params(proposals: T::Enumerable[Proposal]).void }
   def initialize(proposals)
     @records = proposals
   end
 
+  sig { returns(T.class_of(Proposal)) }
   def model
     Proposal
   end
 
   private
 
+    sig { params(proposal: Proposal).returns(T::Hash[Symbol, T.untyped]) }
     def json_values(proposal)
       {
         id: proposal.id,
@@ -23,6 +29,7 @@ class Proposal::Exporter
       }
     end
 
+    sig { returns(T::Array[String]) }
     def model_headers
       [
         I18n.t("admin.proposals.index.list.id"),
@@ -33,11 +40,12 @@ class Proposal::Exporter
       ]
     end
 
+    sig { params(proposal: Proposal).returns(T::Array[T.nilable(String)]) }
     def record_csv_values(proposal)
       [
         proposal.id.to_s,
         proposal.title,
-        proposal.author.email,
+        T.must(proposal.author).email,
         proposal.summary,
         I18n.l(proposal.created_at, format: :datetime)
       ]

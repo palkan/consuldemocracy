@@ -1,3 +1,4 @@
+# typed: strict
 class Moderation::CommentsController < Moderation::BaseController
   include ModerateActions
 
@@ -10,10 +11,12 @@ class Moderation::CommentsController < Moderation::BaseController
 
   private
 
+    sig { override.returns(T.class_of(Comment)) }
     def resource_model
       Comment
     end
 
+    sig { returns(Symbol) }
     def author_id
       :user_id
     end

@@ -1,3 +1,4 @@
+# typed: strict
 module Mappable
   extend ActiveSupport::Concern
 

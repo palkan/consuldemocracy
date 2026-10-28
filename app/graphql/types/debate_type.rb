@@ -1,3 +1,4 @@
+# typed: strict
 module Types
   class DebateType < Types::BaseObject
     field :cached_votes_down, Integer, null: true
@@ -15,6 +16,7 @@ module Types
     field :title, String, null: true
     collection_field :votes_for, Types::VoteType, null: true
 
+    sig { returns(ActsAsTaggableOn::Tag::PrivateAssociationRelation) }
     def tags
       object.tags.public_for_api
     end

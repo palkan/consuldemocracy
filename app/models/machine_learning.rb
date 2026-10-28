@@ -1,19 +1,35 @@
+# typed: strict
 class MachineLearning
-  attr_reader :user, :script, :previous_modified_date
+  extend T::Sig
+
+  sig { returns(T.nilable(User)) }
+  attr_reader :user
+
+  sig { returns(T.nilable(String)) }
+  attr_reader :script
+
+  sig { returns(T::Hash[String, T.nilable(Time)]) }
+  attr_reader :previous_modified_date
+
+  sig { returns(MachineLearningJob) }
   attr_accessor :job
 
-  SCRIPTS_FOLDER = Rails.root.join("public", "machine_learning", "scripts").freeze
+  SCRIPTS_FOLDER = T.let(Rails.root.join("public", "machine_learning", "scripts").freeze, Pathname)
 
+  sig { params(job: MachineLearningJob).void }
   def initialize(job)
     @job = job
-    @user = job.user
-    @previous_modified_date = set_previous_modified_date
+    @user = T.let(job.user, T.nilable(User))
+    @script = T.let(nil, T.nilable(String))
+    @previous_modified_date = T.let(set_previous_modified_date, T::Hash[String, T.nilable(Time)])
   end
 
+  sig { returns(Pathname) }
   def data_folder
     self.class.data_folder
   end
 
+  sig { void }
   def run
     export_proposals_to_json
     export_budget_investments_to_json
@@ -68,30 +84,39 @@ class MachineLearning
   handle_asynchronously :run, queue: "machine_learning"
 
   class << self
+    extend T::Sig
+
+    sig { returns(T::Boolean) }
     def enabled?
       Setting["feature.machine_learning"].present?
     end
 
+    sig { returns(String) }
     def proposals_filename
       "proposals.json"
     end
 
+    sig { returns(String) }
     def investments_filename
       "budget_investments.json"
     end
 
+    sig { returns(String) }
     def comments_filename
       "comments.json"
     end
 
+    sig { returns(Pathname) }
     def data_folder
       Rails.root.join("public", tenant_data_folder)
     end
 
+    sig { returns(String) }
     def tenant_data_folder
       Tenant.path_with_subfolder("machine_learning/data")
     end
 
+    sig { returns(T::Hash[Symbol, T::Array[String]]) }
     def data_output_files
       files = { tags: [], related_content: [], comments_summary: [] }
 
@@ -125,6 +150,7 @@ class MachineLearning
       files
     end
 
+    sig { returns(T::Array[String]) }
     def data_intermediate_files
       excluded = [
         proposals_filename,
@@ -140,54 +166,65 @@ class MachineLearning
         investments_comments_summary_filename
       ]
       json = Dir[data_folder.join("*.json")].map do |full_path_filename|
-        full_path_filename.split("/").last
+        T.must(full_path_filename.split("/").last)
       end
       csv = Dir[data_folder.join("*.csv")].map do |full_path_filename|
-        full_path_filename.split("/").last
+        T.must(full_path_filename.split("/").last)
       end
       (json + csv - excluded).sort
     end
 
+    sig { returns(String) }
     def proposals_tags_filename
       "ml_tags_proposals.json"
     end
 
+    sig { returns(String) }
     def proposals_taggings_filename
       "ml_taggings_proposals.json"
     end
 
+    sig { returns(String) }
     def investments_tags_filename
       "ml_tags_budgets.json"
     end
 
+    sig { returns(String) }
     def investments_taggings_filename
       "ml_taggings_budgets.json"
     end
 
+    sig { returns(String) }
     def proposals_related_filename
       "ml_related_content_proposals.json"
     end
 
+    sig { returns(String) }
     def investments_related_filename
       "ml_related_content_budgets.json"
     end
 
+    sig { returns(String) }
     def proposals_comments_summary_filename
       "ml_comments_summaries_proposals.json"
     end
 
+    sig { returns(String) }
     def investments_comments_summary_filename
       "ml_comments_summaries_budgets.json"
     end
 
+    sig { params(filename: String).returns(String) }
     def data_path(filename)
       "/#{tenant_data_folder}/#{filename}"
     end
 
+    sig { returns(T::Array[String]) }
     def script_kinds
       %w[tags related_content comments_summary]
     end
 
+    sig { returns(T::Array[T::Hash[Symbol, String]]) }
     def scripts_info
       Dir[SCRIPTS_FOLDER.join("*.py")].map do |full_path_filename|
         {
@@ -197,11 +234,12 @@ class MachineLearning
       end.sort_by { |script_info| script_info[:name] }
     end
 
+    sig { params(script_filename: String).returns(String) }
     def description_from(script_filename)
-      description_lines = []
+      description_lines = T.let([], T::Array[String])
       delimiter = '"""'
       break_line = "<br>"
-      comment_found = false
+      comment_found = T.let(false, T::Boolean)
       File.readlines(script_filename).each do |line|
         if line.start_with?(delimiter) && !comment_found
           comment_found = true
@@ -222,28 +260,33 @@ class MachineLearning
 
   private
 
+    sig { void }
     def create_data_folder
       FileUtils.mkdir_p data_folder
     end
 
+    sig { void }
     def export_proposals_to_json
       create_data_folder
       filename = data_folder.join(MachineLearning.proposals_filename)
       Proposal::Exporter.new([]).to_json_file(filename)
     end
 
+    sig { void }
     def export_budget_investments_to_json
       create_data_folder
       filename = data_folder.join(MachineLearning.investments_filename)
       Budget::Investment::Exporter.new(Array.new).to_json_file(filename)
     end
 
+    sig { void }
     def export_comments_to_json
       create_data_folder
       filename = data_folder.join(MachineLearning.comments_filename)
       Comment::Exporter.new.to_json_file(filename)
     end
 
+    sig { returns(T.nilable(T::Boolean)) }
     def run_machine_learning_scripts
       output = `cd #{SCRIPTS_FOLDER} && #{script_command} 2>&1`
       result = command_success?
@@ -254,6 +297,7 @@ class MachineLearning
       result
     end
 
+    sig { returns(T.any(String, FalseClass)) }
     def script_command
       base_command = "python #{job.script}"
 
@@ -266,36 +310,44 @@ class MachineLearning
       self.class.scripts_info.any? { |script| script[:name] == job.script } && command
     end
 
+    sig { returns(T.nilable(T::Boolean)) }
     def command_success?
       $?.success?
     end
 
+    sig { void }
     def cleanup_proposals_tags!
       Tagging.where(context: "ml_tags", taggable_type: "Proposal").find_each(&:destroy!)
       Tag.find_each { |tag| tag.destroy! if Tagging.where(tag: tag).empty? }
     end
 
+    sig { void }
     def cleanup_investments_tags!
       Tagging.where(context: "ml_tags", taggable_type: "Budget::Investment").find_each(&:destroy!)
       Tag.find_each { |tag| tag.destroy! if Tagging.where(tag: tag).empty? }
     end
 
+    sig { void }
     def cleanup_proposals_related_content!
       RelatedContent.with_hidden.for_proposals.from_machine_learning.find_each(&:really_destroy!)
     end
 
+    sig { void }
     def cleanup_investments_related_content!
       RelatedContent.with_hidden.for_investments.from_machine_learning.find_each(&:really_destroy!)
     end
 
+    sig { void }
     def cleanup_proposals_comments_summary!
       MlSummaryComment.where(commentable_type: "Proposal").find_each(&:destroy!)
     end
 
+    sig { void }
     def cleanup_investments_comments_summary!
       MlSummaryComment.where(commentable_type: "Budget::Investment").find_each(&:destroy!)
     end
 
+    sig { void }
     def import_ml_proposals_comments_summary
       json_file = data_folder.join(MachineLearning.proposals_comments_summary_filename)
       json_data = JSON.parse(File.read(json_file)).each(&:deep_symbolize_keys!)
@@ -308,6 +360,7 @@ class MachineLearning
       end
     end
 
+    sig { void }
     def import_ml_investments_comments_summary
       json_file = data_folder.join(MachineLearning.investments_comments_summary_filename)
       json_data = JSON.parse(File.read(json_file)).each(&:deep_symbolize_keys!)
@@ -320,6 +373,7 @@ class MachineLearning
       end
     end
 
+    sig { void }
     def import_proposals_related_content
       json_file = data_folder.join(MachineLearning.proposals_related_filename)
       json_data = JSON.parse(File.read(json_file)).each(&:deep_symbolize_keys!)
@@ -348,6 +402,7 @@ class MachineLearning
       end
     end
 
+    sig { void }
     def import_budget_investments_related_content
       json_file = data_folder.join(MachineLearning.investments_related_filename)
       json_data = JSON.parse(File.read(json_file)).each(&:deep_symbolize_keys!)
@@ -376,6 +431,7 @@ class MachineLearning
       end
     end
 
+    sig { void }
     def import_ml_proposals_tags
       ids = {}
       json_file = data_folder.join(MachineLearning.proposals_tags_filename)
@@ -406,6 +462,7 @@ class MachineLearning
       end
     end
 
+    sig { void }
     def import_ml_investments_tags
       ids = {}
       json_file = data_folder.join(MachineLearning.investments_tags_filename)
@@ -436,11 +493,13 @@ class MachineLearning
       end
     end
 
+    sig { params(kind: String).void }
     def update_machine_learning_info_for(kind)
       MachineLearningInfo.find_or_create_by!(kind: kind)
                          .update!(generated_at: job.started_at, script: job.script)
     end
 
+    sig { returns(T::Hash[String, T.nilable(Time)]) }
     def set_previous_modified_date
       proposals_tags_filename = MachineLearning.proposals_tags_filename
       proposals_taggings_filename = MachineLearning.proposals_taggings_filename
@@ -463,22 +522,25 @@ class MachineLearning
       }
     end
 
+    sig { params(filename: String).returns(T.nilable(Time)) }
     def last_modified_date_for(filename)
       return nil unless File.exist? data_folder.join(filename)
 
       File.mtime data_folder.join(filename)
     end
 
+    sig { params(filename: String).returns(T::Boolean) }
     def updated_file?(filename)
       return false unless File.exist? data_folder.join(filename)
       return true if previous_modified_date[filename].blank?
 
-      last_modified_date_for(filename) > previous_modified_date[filename]
+      T.must(last_modified_date_for(filename)) > T.must(previous_modified_date[filename])
     end
 
+    sig { params(error: Exception).void }
     def handle_error(error)
       message = error.message
-      backtrace = error.backtrace.select { |line| line.include?("machine_learning.rb") }
+      backtrace = T.must(error.backtrace).select { |line| line.include?("machine_learning.rb") }
       full_error = ([message] + backtrace).join("<br>")
       job.update!(finished_at: Time.current, error: full_error)
       Mailer.machine_learning_error(user).deliver_later

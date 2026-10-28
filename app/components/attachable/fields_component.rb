@@ -1,7 +1,27 @@
+# typed: strict
 class Attachable::FieldsComponent < ApplicationComponent
-  attr_reader :f, :resource_type, :resource_id, :relation_name
+  sig { returns(ActionView::Helpers::FormBuilder) }
+  attr_reader :f
+
+  sig { returns(T.nilable(String)) }
+  attr_reader :resource_type
+
+  sig { returns(T.nilable(Integer)) }
+  attr_reader :resource_id
+
+  sig { returns(String) }
+  attr_reader :relation_name
+
   delegate :render_image, to: :helpers
 
+  sig do
+    params(
+      f: ActionView::Helpers::FormBuilder,
+      resource_type: T.nilable(String),
+      resource_id: T.nilable(Integer),
+      relation_name: String
+    ).void
+  end
   def initialize(f, resource_type:, resource_id:, relation_name:)
     @f = f
     @resource_type = resource_type
@@ -11,28 +31,34 @@ class Attachable::FieldsComponent < ApplicationComponent
 
   private
 
+    sig { returns(T.any(Document, Image)) }
     def attachable
       f.object
     end
 
+    sig { returns(String) }
     def singular_name
       attachable.model_name.singular
     end
 
+    sig { returns(String) }
     def plural_name
       attachable.model_name.plural
     end
 
+    sig { returns(T.nilable(T::Boolean)) }
     def valid_image?
       attachable.attachment.attached? &&
         attachable.attachment.image? &&
         attachable.errors[:attachment].empty?
     end
 
+    sig { returns(T.nilable(String)) }
     def file_name
       attachable.attachment_file_name if attachable.errors.empty?
     end
 
+    sig { returns(ActiveSupport::SafeBuffer) }
     def destroy_link
       if !attachable.persisted? && attachable.cached_attachment.present?
         link_to t("#{plural_name}.form.delete_button"), "#", class: "delete remove-cached-attachment"
@@ -41,6 +67,7 @@ class Attachable::FieldsComponent < ApplicationComponent
       end
     end
 
+    sig { returns(String) }
     def remove_association_text
       if attachable.new_record?
         t("documents.form.cancel_button")
@@ -49,6 +76,7 @@ class Attachable::FieldsComponent < ApplicationComponent
       end
     end
 
+    sig { returns(ActiveSupport::SafeBuffer) }
     def file_field
       klass = attachable.persisted? || attachable.cached_attachment.present? ? "hide" : ""
       f.file_field :attachment,
@@ -58,12 +86,14 @@ class Attachable::FieldsComponent < ApplicationComponent
                    data: { url: direct_upload_path }
     end
 
+    sig { returns(String) }
     def direct_upload_path
       direct_uploads_path("direct_upload[resource_type]": resource_type,
                           "direct_upload[resource_id]": resource_id,
                           "direct_upload[resource_relation]": relation_name)
     end
 
+    sig { returns(String) }
     def accepted_content_types_extensions
       Setting.accepted_content_types_for(plural_name).map do |content_type|
         if content_type == "jpg"
@@ -74,12 +104,14 @@ class Attachable::FieldsComponent < ApplicationComponent
       end.join(",")
     end
 
+    sig { returns(ActiveSupport::SafeBuffer) }
     def progress_bar
       tag.progress max: "100",
                    class: progress_bar_status_class,
                    "aria-label": t("documents.form.progress")
     end
 
+    sig { returns(T.nilable(String)) }
     def progress_bar_status_class
       if attachable.errors[:attachment].any?
         "errors"

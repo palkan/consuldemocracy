@@ -1,17 +1,23 @@
+# typed: strict
 class Admin::BudgetInvestments::ToggleSelectionComponent < ApplicationComponent
+  sig { returns(Budget::Investment) }
   attr_reader :investment
+
   delegate :selected?, to: :investment
 
+  sig { params(investment: Budget::Investment).void }
   def initialize(investment)
     @investment = investment
   end
 
   private
 
+    sig { returns(String) }
     def selected_text
       t("admin.budget_investments.index.selected")
     end
 
+    sig { returns(Symbol) }
     def action
       if selected?
         :deselect
@@ -20,6 +26,7 @@ class Admin::BudgetInvestments::ToggleSelectionComponent < ApplicationComponent
       end
     end
 
+    sig { returns(String) }
     def path
       url_for({
         controller: "admin/budget_investments",
@@ -35,6 +42,7 @@ class Admin::BudgetInvestments::ToggleSelectionComponent < ApplicationComponent
       })
     end
 
+    sig { returns(T::Hash[Symbol, String]) }
     def options
       {
         "aria-label": label,
@@ -43,6 +51,7 @@ class Admin::BudgetInvestments::ToggleSelectionComponent < ApplicationComponent
       }
     end
 
+    sig { returns(String) }
     def label
       t("admin.actions.label", action: t("admin.actions.select"), name: investment.title)
     end

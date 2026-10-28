@@ -1,5 +1,10 @@
+# typed: strict
 module SDG::Relatable
   extend ActiveSupport::Concern
+  extend T::Helpers
+  extend T::Sig
+
+  requires_ancestor { ApplicationRecord }
 
   included do
     has_many :sdg_relations, as: :relatable, dependent: :destroy, class_name: "SDG::Relation"
@@ -18,11 +23,18 @@ module SDG::Relatable
     has_one :sdg_review, as: :relatable, dependent: :destroy, class_name: "SDG::Review"
   end
 
-  class_methods do
+  module ClassMethods
+    extend T::Helpers
+    extend T::Sig
+
+    requires_ancestor { T.class_of(ApplicationRecord) }
+
+    sig { params(code: T.nilable(T.any(String, Integer))).returns(ActiveRecord::Relation) }
     def by_goal(code)
       by_sdg_related(:sdg_goals, code)
     end
 
+    sig { params(code: T.nilable(String)).returns(ActiveRecord::Relation) }
     def by_target(code)
       if SDG::Target.find_by(code: code)
         by_sdg_related(:sdg_global_targets, code)
@@ -31,6 +43,10 @@ module SDG::Relatable
       end
     end
 
+    sig do
+      params(association: Symbol, code: T.nilable(T.any(String, Integer)))
+        .returns(ActiveRecord::Relation)
+    end
     def by_sdg_related(association, code)
       return all if code.blank?
 
@@ -39,23 +55,28 @@ module SDG::Relatable
       joins(association).merge(sdg_class.where(code: code))
     end
 
+    sig { returns(ActiveRecord::Relation) }
     def sdg_reviewed
       joins(:sdg_review)
     end
 
+    sig { returns(ActiveRecord::Relation) }
     def pending_sdg_review
       where.missing(:sdg_review)
     end
   end
 
+  sig { returns(T::Array[SDG::Related]) }
   def related_sdgs
     sdg_relations.map(&:related_sdg)
   end
 
+  sig { returns(T::Array[T.any(SDG::Target, SDG::LocalTarget)]) }
   def sdg_targets
     sdg_global_targets + sdg_local_targets
   end
 
+  sig { params(targets: T::Array[T.any(SDG::Target, SDG::LocalTarget)]).void }
   def sdg_targets=(targets)
     global_targets, local_targets = targets.partition { |target| target.class.name == "SDG::Target" }
 
@@ -65,18 +86,22 @@ module SDG::Relatable
     end
   end
 
+  sig { returns(String) }
   def sdg_goal_list
     sdg_goals.order(:code).map(&:code).join(", ")
   end
 
+  sig { returns(String) }
   def sdg_target_list
     sdg_targets.sort.map(&:code).join(", ")
   end
 
+  sig { returns(String) }
   def related_sdg_list
     related_sdgs.sort.map(&:code).join(", ")
   end
 
+  sig { params(codes: String).void }
   def related_sdg_list=(codes)
     target_codes, goal_codes = codes.tr(" ", "").split(",").partition { |code| code.include?(".") }
     local_targets_codes, global_targets_codes = target_codes.partition { |code| code.split(".")[2] }

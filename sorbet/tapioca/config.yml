@@ -1,0 +1,14 @@
+gem:
+  environment: test
+  # Capistrano plugins define tasks at load time and fail outside of `cap`
+  exclude:
+    - capistrano
+    - capistrano-bundler
+    - capistrano-npm
+    - capistrano-rails
+    - capistrano3-delayed-job
+    - capistrano3-puma
+    - rvm1-capistrano3
+    - sshkit
+dsl:
+  environment: test

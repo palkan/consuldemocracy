@@ -1,6 +1,9 @@
+# typed: strict
 module Consul
   module Repository
     class << self
+      extend T::Sig
+
       # This URL will be used to deploy your source code with Capistrano.
       # In order to comply with the AGPL, a link to this URL will also be
       # automatically added to the footer, alongside other legal links
@@ -12,12 +15,14 @@ module Consul
       #
       # Remember that, to comply with the AGPL, any person visiting your
       # website must also have (read) access to your source code.
+      sig { returns(String) }
       def url
         consul_url
       end
 
       private
 
+        sig { returns(String) }
         def consul_url
           "https://github.com/consuldemocracy/consuldemocracy.git"
         end

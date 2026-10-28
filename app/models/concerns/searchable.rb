@@ -1,3 +1,4 @@
+# typed: strict
 module Searchable
   extend ActiveSupport::Concern
 

@@ -1,3 +1,4 @@
+# typed: true
 class Admin::Poll::Questions::OptionsController < Admin::Poll::BaseController
   include Translatable
 
@@ -6,9 +7,11 @@ class Admin::Poll::Questions::OptionsController < Admin::Poll::BaseController
                               through: :question,
                               through_association: :question_options
 
+  sig { void }
   def new
   end
 
+  sig { void }
   def create
     if @option.save
       redirect_to admin_question_path(@question),
@@ -18,9 +21,11 @@ class Admin::Poll::Questions::OptionsController < Admin::Poll::BaseController
     end
   end
 
+  sig { void }
   def edit
   end
 
+  sig { void }
   def update
     if @option.update(option_params)
       redirect_to admin_question_path(@question),
@@ -30,11 +35,13 @@ class Admin::Poll::Questions::OptionsController < Admin::Poll::BaseController
     end
   end
 
+  sig { void }
   def destroy
     @option.destroy!
     redirect_to admin_question_path(@question), notice: t("admin.answers.destroy.success_notice")
   end
 
+  sig { void }
   def order_options
     ::Poll::Question::Option.order_options(params[:ordered_list])
     head :ok
@@ -42,10 +49,12 @@ class Admin::Poll::Questions::OptionsController < Admin::Poll::BaseController
 
   private
 
+    sig { returns(ActionController::Parameters) }
     def option_params
       params.require(:poll_question_option).permit(allowed_params)
     end
 
+    sig { returns(T::Array[T.any(Symbol, T::Hash[Symbol, T.untyped])]) }
     def allowed_params
       attributes = [:title, :description, :given_order, :allow_custom_text]
 

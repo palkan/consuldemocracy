@@ -1,3 +1,4 @@
+# typed: true
 class Admin::Poll::BaseController < Admin::BaseController
   include FeatureFlags
 

@@ -1,4 +1,6 @@
+# typed: strict
 class Admin::Settings::ParticipationProcessesTabComponent < ApplicationComponent
+  sig { returns(T::Array[String]) }
   def settings
     %w[
       process.debates

@@ -1,6 +1,7 @@
 default: &default
   adapter: postgresql
   encoding: unicode
+  url: <%= ENV["DATABASE_URL"] %>
   host: <%= ENV["DB_HOST"].presence || "localhost" %>
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
   schema_search_path: "public,shared_extensions"

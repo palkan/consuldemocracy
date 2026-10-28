@@ -1,8 +1,11 @@
+# typed: strict
 class Admin::Settings::ImagesAndDocumentsTabComponent < ApplicationComponent
+  sig { returns(String) }
   def tab
     "#tab-images-and-documents"
   end
 
+  sig { returns(T::Array[String]) }
   def images_settings
     %w[
       uploads.images.title.min_length
@@ -13,6 +16,7 @@ class Admin::Settings::ImagesAndDocumentsTabComponent < ApplicationComponent
     ]
   end
 
+  sig { returns(T::Array[String]) }
   def documents_settings
     %w[
       uploads.documents.max_amount

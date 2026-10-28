@@ -1,3 +1,4 @@
+# typed: true
 class Admin::ProposalsController < Admin::BaseController
   include HasOrders
   include Search
@@ -9,6 +10,7 @@ class Admin::ProposalsController < Admin::BaseController
 
   before_action :load_proposal, except: [:index, :successful]
 
+  sig { void }
   def index
     @proposals = Proposal.for_render
     @proposals = @proposals.search(@search_terms) if @search_terms.present?
@@ -23,13 +25,16 @@ class Admin::ProposalsController < Admin::BaseController
     end
   end
 
+  sig { void }
   def successful
     @proposals = Proposal.successful.sort_by_confidence_score
   end
 
+  sig { void }
   def show
   end
 
+  sig { void }
   def update
     if @proposal.update(proposal_params)
       redirect_to admin_proposal_path(@proposal), notice: t("admin.proposals.update.notice")
@@ -38,6 +43,7 @@ class Admin::ProposalsController < Admin::BaseController
     end
   end
 
+  sig { void }
   def select
     @proposal.update!(selected: true)
 
@@ -47,6 +53,7 @@ class Admin::ProposalsController < Admin::BaseController
     end
   end
 
+  sig { void }
   def deselect
     @proposal.update!(selected: false)
 
@@ -58,14 +65,17 @@ class Admin::ProposalsController < Admin::BaseController
 
   private
 
+    sig { void }
     def load_proposal
       @proposal = Proposal.find(params[:id])
     end
 
+    sig { returns(ActionController::Parameters) }
     def proposal_params
       params.require(:proposal).permit(allowed_params)
     end
 
+    sig { returns(T::Array[T.any(Symbol, T::Hash[Symbol, T.untyped])]) }
     def allowed_params
       [:selected]
     end

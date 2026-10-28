@@ -1,4 +1,8 @@
+# typed: strict
 class GeojsonFormatValidator < ActiveModel::EachValidator
+  extend T::Sig
+
+  sig { params(record: ActiveModel::Validations, attribute: Symbol, value: T.untyped).void }
   def validate_each(record, attribute, value)
     if value.present?
       geojson = parse_json(value)
@@ -16,12 +20,14 @@ class GeojsonFormatValidator < ActiveModel::EachValidator
 
   private
 
+    sig { params(geojson_data: String).returns(T.untyped) }
     def parse_json(geojson_data)
       JSON.parse(geojson_data)
     rescue JSON::ParserError
       nil
     end
 
+    sig { params(geojson: T.untyped).returns(T::Boolean) }
     def valid_geojson?(geojson)
       return false unless geojson.is_a?(Hash)
 
@@ -34,20 +40,24 @@ class GeojsonFormatValidator < ActiveModel::EachValidator
       end
     end
 
+    sig { params(geojson: T.untyped).returns(T::Boolean) }
     def valid_feature_collection?(geojson)
       return false unless geojson["features"].is_a?(Array)
 
       geojson["features"].all? { |feature| valid_feature?(feature) }
     end
 
+    sig { params(feature: T.untyped).returns(T::Boolean) }
     def valid_feature?(feature)
-      feature["type"] == "Feature" && valid_geometry?(feature["geometry"])
+      "Feature" == feature["type"] && valid_geometry?(feature["geometry"])
     end
 
+    sig { params(geometry: Object).returns(T::Boolean) }
     def valid_geometry?(geometry)
       geometry.is_a?(Hash) && valid_geometry_types.include?(geometry["type"])
     end
 
+    sig { returns(T::Array[String]) }
     def valid_geometry_types
       [
         "Point", "LineString", "Polygon", "MultiPoint", "MultiLineString", "MultiPolygon",
@@ -55,6 +65,7 @@ class GeojsonFormatValidator < ActiveModel::EachValidator
       ]
     end
 
+    sig { params(geojson: T.untyped).returns(T::Boolean) }
     def valid_coordinates?(geojson)
       if geojson["type"] == "FeatureCollection"
         geojson["features"].all? { |feature| valid_coordinates?(feature) }
@@ -65,9 +76,10 @@ class GeojsonFormatValidator < ActiveModel::EachValidator
       end
     end
 
+    sig { params(geometry: T.untyped).returns(T::Boolean) }
     def valid_geometry_coordinates?(geometry)
       if geometry["type"] == "GeometryCollection"
-        geometries = geometry["geometries"]
+        geometries = T.let(geometry["geometries"], Object)
 
         return geometries.is_a?(Array) && geometries.all? { |geom| valid_geometry_coordinates?(geom) }
       end
@@ -98,6 +110,7 @@ class GeojsonFormatValidator < ActiveModel::EachValidator
       end
     end
 
+    sig { params(coordinates: T.untyped).returns(T::Boolean) }
     def valid_wgs84_coordinates?(coordinates)
       return false unless coordinates.is_a?(Array) && coordinates.size == 2
 
@@ -105,20 +118,24 @@ class GeojsonFormatValidator < ActiveModel::EachValidator
       (-180.0..180.0).include?(longitude) && (-90.0..90.0).include?(latitude)
     end
 
+    sig { params(coordinates_array: Object).returns(T::Boolean) }
     def valid_coordinates_array?(coordinates_array)
       coordinates_array.is_a?(Array) &&
         coordinates_array.all? { |coordinates| valid_wgs84_coordinates?(coordinates) }
     end
 
+    sig { params(coordinates: T.untyped).returns(T::Boolean) }
     def valid_linestring_coordinates?(coordinates)
       valid_coordinates_array?(coordinates) && coordinates.many?
     end
 
+    sig { params(polygon_coordinates: Object).returns(T::Boolean) }
     def valid_polygon_coordinates?(polygon_coordinates)
       polygon_coordinates.is_a?(Array) &&
         polygon_coordinates.all? { |ring_coordinates| valid_ring_coordinates?(ring_coordinates) }
     end
 
+    sig { params(ring_coordinates: T.untyped).returns(T::Boolean) }
     def valid_ring_coordinates?(ring_coordinates)
       valid_coordinates_array?(ring_coordinates) &&
         ring_coordinates.size >= 4 &&

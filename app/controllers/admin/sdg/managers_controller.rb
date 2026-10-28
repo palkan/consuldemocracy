@@ -1,6 +1,8 @@
+# typed: true
 class Admin::SDG::ManagersController < Admin::BaseController
   load_and_authorize_resource instance_name: :sdg_manager, class: "SDG::Manager"
 
+  sig { void }
   def index
     if params[:search]
       @users = User.accessible_by(current_ability).search(params[:search]).page(params[:page])
@@ -9,6 +11,7 @@ class Admin::SDG::ManagersController < Admin::BaseController
     end
   end
 
+  sig { void }
   def create
     @sdg_manager.user_id = params[:user_id]
     @sdg_manager.save!
@@ -16,6 +19,7 @@ class Admin::SDG::ManagersController < Admin::BaseController
     redirect_to admin_sdg_managers_path
   end
 
+  sig { void }
   def destroy
     @sdg_manager.destroy!
     redirect_to admin_sdg_managers_path

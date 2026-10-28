@@ -1,16 +1,29 @@
+# typed: true
 class DirectUpload
   include ActiveModel::Validations
   include ActiveModel::Conversion
   extend ActiveModel::Naming
+  extend T::Sig
 
-  attr_accessor :resource, :resource_type, :resource_id,
-                :relation, :resource_relation,
-                :attachment, :cached_attachment, :user, :title
+  sig { returns(T.untyped) }
+  attr_accessor :resource, :resource_id, :attachment
+
+  sig { returns(T.nilable(String)) }
+  attr_accessor :resource_type, :resource_relation, :cached_attachment, :title
+
+  sig { returns(T.nilable(T.any(Image, Document))) }
+  attr_accessor :relation
+
+  sig { returns(T.nilable(User)) }
+  attr_accessor :user
 
   validates :attachment, :resource_type, :resource_relation, :user, presence: true
   validate :parent_resource_attachment_validations,
-           if: -> { [attachment, resource_type, resource_relation, user].all?(&:present?) }
+           if: ->(upload) do
+             [upload.attachment, upload.resource_type, upload.resource_relation, upload.user].all?(&:present?)
+           end
 
+  sig { params(attributes: T.any(T::Hash[T.untyped, T.untyped], ActionController::Parameters)).void }
   def initialize(attributes = {})
     attributes.each do |name, value|
       send("#{name}=", value)
@@ -32,17 +45,21 @@ class DirectUpload
                     @resource.send(@resource_relation).build(relation_attributtes)
                   end
 
-      @relation.user = user
+      T.must(@relation).user = user
     end
   end
 
+  sig { void }
   def save_attachment
-    @relation.attachment.blob.save!
-    @relation.attachment_changes["attachment"].upload
+    relation = T.must(@relation)
+    relation.attachment.blob.save!
+    relation.attachment_changes["attachment"].upload
   end
 
+  sig { returns(T.nilable(TrueClass)) }
   def save
-    @relation.title = @relation.title.presence || @relation.attachment_file_name
+    relation = T.must(@relation)
+    relation.title = relation.title.presence || relation.attachment_file_name
 
     if valid?
       save_attachment
@@ -51,20 +68,24 @@ class DirectUpload
     end
   end
 
+  sig { returns(T::Boolean) }
   def persisted?
     false
   end
 
   private
 
+    sig { void }
     def parent_resource_attachment_validations
-      @relation.valid?
+      relation = T.must(@relation)
+      relation.valid?
 
-      if @relation.errors.key? :attachment
-        errors.add(:attachment, @relation.errors.full_messages_for(:attachment))
+      if relation.errors.key? :attachment
+        errors.add(:attachment, relation.errors.full_messages_for(:attachment))
       end
     end
 
+    sig { returns(T::Hash[Symbol, T.untyped]) }
     def relation_attributtes
       {
         attachment: @attachment,

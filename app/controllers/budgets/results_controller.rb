@@ -1,3 +1,4 @@
+# typed: true
 module Budgets
   class ResultsController < ApplicationController
     before_action :load_budget
@@ -5,6 +6,7 @@ module Budgets
 
     authorize_resource :budget
 
+    sig { void }
     def show
       authorize! :read_results, @budget
       @investments = Budget::Result.new(@budget, @heading).investments
@@ -13,10 +15,12 @@ module Budgets
 
     private
 
+      sig { void }
       def load_budget
         @budget = Budget.find_by_slug_or_id(params[:budget_id]) || Budget.first
       end
 
+      sig { void }
       def load_heading
         if @budget.present?
           headings = @budget.headings

@@ -1,6 +1,8 @@
+# typed: strict
 class Moderation::MenuComponent < ApplicationComponent
   delegate :link_list, to: :helpers
 
+  sig { returns(T::Array[T.nilable(T::Array[T.untyped])]) }
   def links
     [
       moderation_root_link,
@@ -16,10 +18,12 @@ class Moderation::MenuComponent < ApplicationComponent
 
   private
 
+    sig { returns(T::Array[String]) }
     def moderation_root_link
       [t("moderation.dashboard.index.title"), moderation_root_path]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def proposals_link
       [
         t("moderation.menu.proposals"),
@@ -29,6 +33,7 @@ class Moderation::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def proposal_notifications_link
       [
         t("moderation.menu.proposal_notifications"),
@@ -38,6 +43,7 @@ class Moderation::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def debates_link
       [
         t("moderation.menu.flagged_debates"),
@@ -47,6 +53,7 @@ class Moderation::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def budget_investments_link
       [
         t("moderation.menu.flagged_investments"),
@@ -56,6 +63,7 @@ class Moderation::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def comments_link
       [
         t("moderation.menu.flagged_comments"),
@@ -65,6 +73,7 @@ class Moderation::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def users_link
       [
         t("moderation.menu.users"),
@@ -74,6 +83,7 @@ class Moderation::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def legislation_proposals_link
       [
         t("sdg_management.menu.legislation_proposals"),
@@ -83,6 +93,7 @@ class Moderation::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Boolean) }
     def legislation?
       controller_path.split("/").include?("legislation")
     end

@@ -1,3 +1,4 @@
+# typed: strict
 class Budget
   class ValuatorGroupAssignment < ApplicationRecord
     belongs_to :valuator_group, counter_cache: :budget_investments_count

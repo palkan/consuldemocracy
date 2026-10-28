@@ -1,3 +1,4 @@
+# typed: strict
 class Dashboard::ExecutedAction < ApplicationRecord
   belongs_to :proposal
   belongs_to :action

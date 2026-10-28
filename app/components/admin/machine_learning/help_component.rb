@@ -1,6 +1,8 @@
+# typed: strict
 class Admin::MachineLearning::HelpComponent < ApplicationComponent
   private
 
+    sig { returns(String) }
     def instructions
       <<~INSTRUCTIONS
         sudo apt update

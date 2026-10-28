@@ -1,3 +1,4 @@
+# typed: strict
 class Budget
   class Group < ApplicationRecord
     include Sluggable
@@ -7,11 +8,14 @@ class Budget
 
     translation_class_delegate :budget
 
-    class Translation
+    class Translation < Globalize::ActiveRecord::Translation
+      extend T::Sig
+
       validate :name_uniqueness_by_budget
 
+      sig { void }
       def name_uniqueness_by_budget
-        if budget.groups.joins(:translations)
+        if T.must(budget).groups.joins(:translations)
                  .where(name: name)
                  .where.not("budget_group_translations.budget_group_id": budget_group_id).any?
           errors.add(:name, I18n.t("errors.messages.taken"))
@@ -27,18 +31,21 @@ class Budget
     validates :budget_id, presence: true
     validates :slug, presence: true, format: /\A[a-z0-9\-_]+\z/
 
+    sig { returns(T::Array[Budget::Group]) }
     def self.sort_by_name
       all.sort_by(&:name)
     end
 
+    sig { returns(T::Boolean) }
     def multiple_headings?
       headings.size > 1
     end
 
     private
 
+      sig { returns(T::Boolean) }
       def generate_slug?
-        slug.nil? || budget.drafting?
+        slug.nil? || T.must(budget).drafting?
       end
   end
 end

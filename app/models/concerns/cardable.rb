@@ -1,3 +1,4 @@
+# typed: strict
 module Cardable
   extend ActiveSupport::Concern
 

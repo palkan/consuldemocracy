@@ -1,9 +1,11 @@
+# typed: true
 class CommunitiesController < ApplicationController
   has_orders %w[newest most_commented oldest]
   before_action :set_community, :load_topics, :load_participants
 
   skip_authorization_check
 
+  sig { void }
   def show
     raise ActionController::RoutingError, "Not Found" unless communitable_exists?
 
@@ -12,18 +14,22 @@ class CommunitiesController < ApplicationController
 
   private
 
+    sig { void }
     def set_community
       @community = Community.find(params[:id])
     end
 
+    sig { void }
     def load_topics
       @topics = @community.topics.send("sort_by_#{@current_order}").page(params[:page])
     end
 
+    sig { void }
     def load_participants
       @participants = @community.participants
     end
 
+    sig { returns(T::Boolean) }
     def communitable_exists?
       @community.proposal.present? || @community.investment.present?
     end

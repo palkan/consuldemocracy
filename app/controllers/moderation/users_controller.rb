@@ -1,17 +1,21 @@
+# typed: true
 class Moderation::UsersController < Moderation::BaseController
   before_action :load_users, only: :index
 
   load_and_authorize_resource
 
+  sig { void }
   def index
   end
 
+  sig { void }
   def hide
     hide_user
 
     redirect_with_query_params_to({ action: :index }, { notice: I18n.t("moderation.users.notice_hide") })
   end
 
+  sig { void }
   def block
     block_user
 
@@ -20,20 +24,24 @@ class Moderation::UsersController < Moderation::BaseController
 
   private
 
+    sig { void }
     def load_users
       @users = User.with_hidden.search(params[:search]).page(params[:page]).for_render
     end
 
+    sig { void }
     def hide_user
       @user.hide
       Activity.log(current_user, :hide, @user)
     end
 
+    sig { void }
     def block_user
       @user.block
       Activity.log(current_user, :block, @user)
     end
 
+    sig { returns(String) }
     def resources_index_path
       if request.referer
         if referer_controller == "comments" && referer_params[:id]
@@ -47,14 +55,17 @@ class Moderation::UsersController < Moderation::BaseController
       end
     end
 
+    sig { returns(T::Hash[Symbol, T.untyped]) }
     def referer_params
       Rails.application.routes.recognize_path(request.referer)
     end
 
+    sig { returns(T.nilable(String)) }
     def referer_controller
       referer_params[:controller]
     end
 
+    sig { returns(T::Hash[Symbol, T.untyped]) }
     def referer_index_options
       if referer_controller == "legislation/proposals" && referer_params[:process_id]
         { controller: "/legislation/processes", id: referer_params[:process_id], action: :proposals }

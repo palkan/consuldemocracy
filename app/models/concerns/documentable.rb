@@ -1,3 +1,4 @@
+# typed: strict
 module Documentable
   extend ActiveSupport::Concern
 
@@ -7,14 +8,19 @@ module Documentable
   end
 
   module ClassMethods
+    extend T::Sig
+
+    sig { returns(Integer) }
     def max_documents_allowed
       Setting["uploads.documents.max_amount"].to_i
     end
 
+    sig { returns(Integer) }
     def max_file_size
       Setting["uploads.documents.max_size"].to_i
     end
 
+    sig { returns(T::Array[String]) }
     def accepted_content_types
       Setting["uploads.documents.content_types"]&.split || ["application/pdf"]
     end

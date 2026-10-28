@@ -1,4 +1,6 @@
+# typed: true
 class Admin::StatsController < Admin::BaseController
+  sig { void }
   def show
     @visits    = Visit.count
     @debates   = Debate.with_hidden.count
@@ -27,39 +29,47 @@ class Admin::StatsController < Admin::BaseController
     @investments = Budget::Investment.where(budget_id: budgets_ids).count
   end
 
+  sig { void }
   def graph
     @chart = Ahoy::Chart.new(params[:event])
   end
 
+  sig { void }
   def proposal_notifications
     @proposal_notifications = ProposalNotification.all
     @proposals_with_notifications = @proposal_notifications.select(:proposal_id).distinct.count
   end
 
+  sig { void }
   def direct_messages
     @direct_messages = DirectMessage.count
     @users_who_have_sent_message = DirectMessage.select(:sender_id).distinct.count
   end
 
+  sig { void }
   def budgets
     @budgets = Budget.all
   end
 
+  sig { void }
   def budget_supporting
     @budget = Budget.find(params[:budget_id])
   end
 
+  sig { void }
   def budget_balloting
     @budget = Budget.find(params[:budget_id])
 
     authorize! :read_admin_stats, @budget, message: t("admin.stats.budgets.no_data_before_balloting_phase")
   end
 
+  sig { void }
   def polls
     @polls = ::Poll.current
     @participants = ::Poll::Voter.where(poll: @polls)
   end
 
+  sig { void }
   def sdg
     @goals = SDG::Goal.order(:code)
   end

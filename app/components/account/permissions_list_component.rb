@@ -1,12 +1,16 @@
+# typed: strict
 class Account::PermissionsListComponent < ApplicationComponent
+  sig { returns(User) }
   attr_reader :user
 
+  sig { params(user: User).void }
   def initialize(user)
     @user = user
   end
 
   private
 
+    sig { returns(T::Hash[String, T::Boolean]) }
     def permissions
       {
         t("verification.user_permission_debates") => true,
@@ -16,6 +20,7 @@ class Account::PermissionsListComponent < ApplicationComponent
       }
     end
 
+    sig { params(allowed: T::Boolean).returns(String) }
     def allowed_class(allowed)
       if allowed
         "permission-allowed"

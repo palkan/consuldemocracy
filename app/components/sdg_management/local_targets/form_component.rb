@@ -1,16 +1,20 @@
+# typed: strict
 class SDGManagement::LocalTargets::FormComponent < ApplicationComponent
   include Header
   include TranslatableFormHelper
   include GlobalizeHelper
 
+  sig { returns(SDG::LocalTarget) }
   attr_reader :local_target
 
+  sig { params(local_target: SDG::LocalTarget).void }
   def initialize(local_target)
     @local_target = local_target
   end
 
   private
 
+    sig { override.returns(String) }
     def title
       if local_target.persisted?
         t("sdg_management.local_targets.edit.title")
@@ -19,6 +23,7 @@ class SDGManagement::LocalTargets::FormComponent < ApplicationComponent
       end
     end
 
+    sig { returns(String) }
     def form_url
       if local_target.persisted?
         sdg_management_local_target_path(local_target)
@@ -27,6 +32,7 @@ class SDGManagement::LocalTargets::FormComponent < ApplicationComponent
       end
     end
 
+    sig { returns(ActiveSupport::SafeBuffer) }
     def target_options
       grouped_targets = SDG::Goal.order(:code).map do |goal|
         [

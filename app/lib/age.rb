@@ -1,4 +1,13 @@
+# typed: strict
 module Age
+  extend T::Sig
+
+  sig do
+    params(
+      dob: T.nilable(T.any(Date, Time, ActiveSupport::TimeWithZone)),
+      now: T.any(Date, Time, ActiveSupport::TimeWithZone)
+    ).returns(T.nilable(Integer))
+  end
   def self.in_years(dob, now = Date.current)
     return nil if dob.blank?
 

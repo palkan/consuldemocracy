@@ -1,16 +1,20 @@
+# typed: true
 class Admin::Legislation::QuestionsController < Admin::Legislation::BaseController
   include Translatable
 
   load_and_authorize_resource :process, class: "Legislation::Process"
   load_and_authorize_resource :question, class: "Legislation::Question", through: :process
 
+  sig { void }
   def index
     @questions = @process.questions
   end
 
+  sig { void }
   def new
   end
 
+  sig { void }
   def create
     @question.author = current_user
     if @question.save
@@ -22,6 +26,7 @@ class Admin::Legislation::QuestionsController < Admin::Legislation::BaseControll
     end
   end
 
+  sig { void }
   def update
     if @question.update(question_params)
       notice = t("admin.legislation.questions.update.notice", link: question_path)
@@ -32,6 +37,7 @@ class Admin::Legislation::QuestionsController < Admin::Legislation::BaseControll
     end
   end
 
+  sig { void }
   def destroy
     @question.destroy!
     notice = t("admin.legislation.questions.destroy.notice")
@@ -40,14 +46,18 @@ class Admin::Legislation::QuestionsController < Admin::Legislation::BaseControll
 
   private
 
+    sig { returns(String) }
+
     def question_path
       legislation_process_question_path(@process, @question)
     end
 
+    sig { returns(ActionController::Parameters) }
     def question_params
       params.require(:legislation_question).permit(allowed_params)
     end
 
+    sig { returns(T::Array[T.any(Symbol, T::Hash[Symbol, T.untyped])]) }
     def allowed_params
       [
         translation_params(::Legislation::Question),

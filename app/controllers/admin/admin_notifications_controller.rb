@@ -1,18 +1,23 @@
+# typed: true
 class Admin::AdminNotificationsController < Admin::BaseController
   include Translatable
 
+  sig { void }
   def index
     @admin_notifications = AdminNotification.all
   end
 
+  sig { void }
   def show
     @admin_notification = AdminNotification.find(params[:id])
   end
 
+  sig { void }
   def new
     @admin_notification = AdminNotification.new
   end
 
+  sig { void }
   def create
     @admin_notification = AdminNotification.new(admin_notification_params)
 
@@ -24,10 +29,12 @@ class Admin::AdminNotificationsController < Admin::BaseController
     end
   end
 
+  sig { void }
   def edit
     @admin_notification = AdminNotification.find(params[:id])
   end
 
+  sig { void }
   def update
     @admin_notification = AdminNotification.find(params[:id])
 
@@ -39,6 +46,7 @@ class Admin::AdminNotificationsController < Admin::BaseController
     end
   end
 
+  sig { void }
   def destroy
     @admin_notification = AdminNotification.find(params[:id])
     @admin_notification.destroy!
@@ -47,6 +55,7 @@ class Admin::AdminNotificationsController < Admin::BaseController
     redirect_to admin_admin_notifications_path, notice: notice
   end
 
+  sig { void }
   def deliver
     @admin_notification = AdminNotification.find(params[:id])
 
@@ -62,10 +71,12 @@ class Admin::AdminNotificationsController < Admin::BaseController
 
   private
 
+    sig { returns(ActionController::Parameters) }
     def admin_notification_params
       params.require(:admin_notification).permit(allowed_params)
     end
 
+    sig { returns(T::Array[T.any(Symbol, T::Hash[Symbol, T.untyped])]) }
     def allowed_params
       [:link, :segment_recipient, translation_params(AdminNotification)]
     end

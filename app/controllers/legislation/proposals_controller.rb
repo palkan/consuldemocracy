@@ -1,3 +1,4 @@
+# typed: true
 class Legislation::ProposalsController < Legislation::BaseController
   include Search
   include FlagActions
@@ -13,6 +14,7 @@ class Legislation::ProposalsController < Legislation::BaseController
 
   respond_to :html, :js
 
+  sig { void }
   def show
     @remote_translation_resources = @proposal
     @document = Document.new(documentable: @proposal)
@@ -22,10 +24,12 @@ class Legislation::ProposalsController < Legislation::BaseController
     end
   end
 
+  sig { void }
   def new
     @proposal = Legislation::Proposal.new
   end
 
+  sig { void }
   def create
     @proposal = Legislation::Proposal.new(proposal_params.merge(author: current_user))
 
@@ -37,13 +41,16 @@ class Legislation::ProposalsController < Legislation::BaseController
     end
   end
 
+  sig { void }
   def suggest
     @proposals = @process.proposals
   end
 
+  sig { void }
   def edit
   end
 
+  sig { void }
   def update
     if @proposal.update(proposal_params)
       redirect_to legislation_process_proposal_path(params[:process_id], @proposal),
@@ -55,10 +62,12 @@ class Legislation::ProposalsController < Legislation::BaseController
 
   private
 
+    sig { returns(ActionController::Parameters) }
     def proposal_params
       params.require(:legislation_proposal).permit(allowed_params)
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def allowed_params
       [
         :legislation_process_id, :title,
@@ -69,6 +78,7 @@ class Legislation::ProposalsController < Legislation::BaseController
       ]
     end
 
+    sig { override.returns(T.class_of(Legislation::Proposal)) }
     def resource_model
       Legislation::Proposal
     end

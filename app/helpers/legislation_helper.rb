@@ -1,12 +1,21 @@
+# typed: strict
 module LegislationHelper
+  extend T::Sig
+  extend T::Helpers
+
+  requires_ancestor { ActionView::Base }
+
+  sig { params(date: T.nilable(T.any(Date, Time, ActiveSupport::TimeWithZone))).returns(T.nilable(String)) }
   def format_date(date)
     l(date, format: "%d %b %Y") if date
   end
 
+  sig { params(process: Legislation::Process).returns(String) }
   def new_legislation_proposal_link_text(process)
     t("proposals.index.start_proposal")
   end
 
+  sig { params(process: Legislation::Process).returns(T::Hash[String, String]) }
   def legislation_process_tabs(process)
     {
       "info" => edit_admin_legislation_process_path(process),
@@ -18,10 +27,12 @@ module LegislationHelper
     }
   end
 
+  sig { params(process: Legislation::Process).returns(T::Boolean) }
   def banner_color?(process)
     process.background_color.present? && process.font_color.present?
   end
 
+  sig { params(process: Legislation::Process).returns(T.nilable(String)) }
   def css_for_process_header(process)
     if banner_color?(process)
       "background: #{process.background_color};color: #{process.font_color};"

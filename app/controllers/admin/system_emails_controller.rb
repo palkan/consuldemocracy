@@ -1,6 +1,8 @@
+# typed: true
 class Admin::SystemEmailsController < Admin::BaseController
   before_action :load_system_email, only: [:view, :preview_pending, :moderate_pending]
 
+  sig { void }
   def index
     @system_emails = {
       proposal_notification_digest: %w[view preview_pending],
@@ -18,6 +20,7 @@ class Admin::SystemEmailsController < Admin::BaseController
     }
   end
 
+  sig { void }
   def view
     case @system_email
     when "proposal_notification_digest"
@@ -39,6 +42,7 @@ class Admin::SystemEmailsController < Admin::BaseController
     end
   end
 
+  sig { void }
   def preview_pending
     case @system_email
     when "proposal_notification_digest"
@@ -48,12 +52,14 @@ class Admin::SystemEmailsController < Admin::BaseController
     end
   end
 
+  sig { void }
   def moderate_pending
-    ProposalNotification.find(params[:id]).moderate_system_email(current_user)
+    ProposalNotification.find(params[:id]).moderate_system_email(T.must(current_user))
 
     redirect_to admin_system_email_preview_pending_path("proposal_notification_digest")
   end
 
+  sig { void }
   def send_pending
     Notification.delay.send_pending
 
@@ -63,24 +69,28 @@ class Admin::SystemEmailsController < Admin::BaseController
 
   private
 
+    sig { void }
     def load_system_email
       @system_email = params[:system_email_id]
     end
 
+    sig { void }
     def load_sample_proposal_notifications
       @notifications = Notification.where(notifiable_type: "ProposalNotification").limit(2)
       @subject = t("mailers.proposal_notification_digest.title", org_name: Setting["org_name"])
     end
 
+    sig { void }
     def load_sample_investment
       if Budget::Investment.any?
-        @investment = Budget::Investment.last
+        @investment = T.must(Budget::Investment.last)
         @subject = t("mailers.#{@system_email}.subject", code: @investment.code)
       else
         redirect_to admin_system_emails_path, alert: t("admin.system_emails.alert.no_investments")
       end
     end
 
+    sig { void }
     def load_sample_comment
       @comment = Comment.where(commentable_type: %w[Debate Proposal Budget::Investment]).last
       if @comment
@@ -91,6 +101,7 @@ class Admin::SystemEmailsController < Admin::BaseController
       end
     end
 
+    sig { void }
     def load_sample_reply
       reply = Comment.select(&:reply?).last
       if reply
@@ -100,6 +111,7 @@ class Admin::SystemEmailsController < Admin::BaseController
       end
     end
 
+    sig { void }
     def load_sample_valuation_comment
       comment = Comment.where(commentable_type: "Budget::Investment").last
       if comment
@@ -111,12 +123,14 @@ class Admin::SystemEmailsController < Admin::BaseController
       end
     end
 
+    sig { void }
     def load_sample_user
-      @user = User.last
+      @user = T.must(User.last)
       @token = @user.email_verification_token || SecureRandom.hex
       @subject = t("mailers.email_verification.subject")
     end
 
+    sig { void }
     def load_sample_direct_message
       @direct_message = DirectMessage.new(sender: current_user, receiver: current_user,
                                           title: t("admin.system_emails.message_title"),
@@ -124,9 +138,13 @@ class Admin::SystemEmailsController < Admin::BaseController
       @subject = t("mailers.#{@system_email}.subject")
     end
 
+    sig { returns(String) }
+
     def commentable_name
       t("activerecord.models.#{@commentable.class.name.underscore}", count: 1)
     end
+
+    sig { returns(T::Array[Integer]) }
 
     def unsent_proposal_notifications_ids
       Notification.where(notifiable_type: "ProposalNotification", emailed_at: nil)

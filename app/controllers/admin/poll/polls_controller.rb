@@ -1,3 +1,4 @@
+# typed: true
 class Admin::Poll::PollsController < Admin::Poll::BaseController
   include Translatable
   include ImageAttributes
@@ -7,16 +8,20 @@ class Admin::Poll::PollsController < Admin::Poll::BaseController
 
   before_action :load_geozones, only: [:new, :create, :edit, :update]
 
+  sig { void }
   def index
     @polls = @polls.not_budget.created_by_admin.order(starts_at: :desc)
   end
 
+  sig { void }
   def show
   end
 
+  sig { void }
   def new
   end
 
+  sig { void }
   def create
     @poll.author = current_user
 
@@ -32,9 +37,11 @@ class Admin::Poll::PollsController < Admin::Poll::BaseController
     end
   end
 
+  sig { void }
   def edit
   end
 
+  sig { void }
   def update
     if @poll.update(poll_params)
       redirect_to [:admin, @poll], notice: t("flash.actions.update.poll")
@@ -43,10 +50,12 @@ class Admin::Poll::PollsController < Admin::Poll::BaseController
     end
   end
 
+  sig { void }
   def booth_assignments
     @polls = Poll.current.created_by_admin
   end
 
+  sig { void }
   def destroy
     if ::Poll::Voter.where(poll: @poll).any?
       redirect_to admin_poll_path(@poll), alert: t("admin.polls.destroy.unable_notice")
@@ -59,14 +68,17 @@ class Admin::Poll::PollsController < Admin::Poll::BaseController
 
   private
 
+    sig { void }
     def load_geozones
       @geozones = Geozone.order(:name)
     end
 
+    sig { returns(ActionController::Parameters) }
     def poll_params
       params.require(:poll).permit(allowed_params)
     end
 
+    sig { returns(T::Array[T.any(Symbol, T::Hash[Symbol, T.untyped])]) }
     def allowed_params
       attributes = [:name, :starts_at, :ends_at, :geozone_restricted, :budget_id, :related_sdg_list,
                     geozone_ids: [], image_attributes: image_attributes]

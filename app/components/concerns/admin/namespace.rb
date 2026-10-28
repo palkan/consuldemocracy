@@ -1,4 +1,11 @@
+# typed: strict
 module Admin::Namespace
+  extend T::Sig
+  extend T::Helpers
+
+  requires_ancestor { ApplicationComponent }
+
+  sig { returns(Symbol) }
   def namespace
     if controller.class.name.starts_with?("Admin::BudgetsWizard")
       :admin_budgets_wizard

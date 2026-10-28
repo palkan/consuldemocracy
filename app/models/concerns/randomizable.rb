@@ -1,7 +1,14 @@
+# typed: strict
 module Randomizable
   extend ActiveSupport::Concern
 
-  class_methods do
+  module ClassMethods
+    extend T::Helpers
+    extend T::Sig
+
+    requires_ancestor { T.class_of(ApplicationRecord) }
+
+    sig { params(seed: Integer).returns(ActiveRecord::Relation) }
     def sort_by_random(seed = rand(10_000_000))
       ids = order(:id).ids.shuffle(random: Random.new(seed))
 

@@ -1,10 +1,13 @@
+# typed: true
 class Admin::Poll::OfficersController < Admin::Poll::BaseController
   load_and_authorize_resource :officer, class: "Poll::Officer", except: [:edit, :show]
 
+  sig { void }
   def index
     @officers = @officers.page(params[:page])
   end
 
+  sig { void }
   def search
     @user = User.find_by(email: params[:search])
 
@@ -18,6 +21,7 @@ class Admin::Poll::OfficersController < Admin::Poll::BaseController
     end
   end
 
+  sig { void }
   def create
     @officer.user_id = params[:user_id]
     @officer.save!
@@ -25,6 +29,7 @@ class Admin::Poll::OfficersController < Admin::Poll::BaseController
     redirect_to admin_officers_path
   end
 
+  sig { void }
   def destroy
     @officer.destroy!
     redirect_to admin_officers_path

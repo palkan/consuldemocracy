@@ -1,8 +1,11 @@
+# typed: true
 class Management::UsersController < Management::BaseController
+  sig { void }
   def new
     @user = User.new(user_params.merge(verified_at: Time.current))
   end
 
+  sig { void }
   def create
     @user = User.new(user_params)
 
@@ -23,6 +26,7 @@ class Management::UsersController < Management::BaseController
     end
   end
 
+  sig { void }
   def erase
     if current_manager.present?
       managed_user.erase(t("management.users.erased_by_manager", manager: current_manager_login))
@@ -32,6 +36,7 @@ class Management::UsersController < Management::BaseController
     redirect_to management_document_verifications_path, notice: t("management.users.erased_notice")
   end
 
+  sig { void }
   def logout
     destroy_session
     redirect_to management_root_path, notice: t("management.sessions.signed_out_managed_user")
@@ -39,20 +44,24 @@ class Management::UsersController < Management::BaseController
 
   private
 
+    sig { returns(ActionController::Parameters) }
     def user_params
       params.require(:user).permit(allowed_params)
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def allowed_params
       [:document_type, :document_number, :username, :email, :date_of_birth]
     end
 
+    sig { void }
     def destroy_session
       session[:document_type] = nil
       session[:document_number] = nil
       clear_password
     end
 
+    sig { void }
     def user_without_email
       new_password = User.random_password
       @user.password = new_password
@@ -68,6 +77,7 @@ class Management::UsersController < Management::BaseController
       @user.email_on_comment_reply = false
     end
 
+    sig { void }
     def user_with_email
       @user.skip_password_validation = true
     end

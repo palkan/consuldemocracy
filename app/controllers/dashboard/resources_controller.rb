@@ -1,6 +1,8 @@
+# typed: true
 class Dashboard::ResourcesController < Dashboard::BaseController
   skip_authorization_check
 
+  sig { void }
   def index
     @resources = Dashboard::Action
                  .active

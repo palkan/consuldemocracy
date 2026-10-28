@@ -1,3 +1,4 @@
+# typed: true
 module Legislation
   module Proposals
     class VotesController < ApplicationController
@@ -8,9 +9,10 @@ module Legislation
                                              id_param: "legislation_proposal_id"
       load_and_authorize_resource through: :proposal, through_association: :votes_for, only: :destroy
 
+      sig { void }
       def create
         authorize! :create, Vote.new(voter: current_user, votable: @proposal)
-        current_user.with_lock { @proposal.vote_by(voter: current_user, vote: params[:value]) }
+        T.must(current_user).with_lock { @proposal.vote_by(voter: current_user, vote: params[:value]) }
 
         respond_to do |format|
           format.html { redirect_to request.referer, notice: I18n.t("flash.actions.create.vote") }
@@ -18,6 +20,7 @@ module Legislation
         end
       end
 
+      sig { void }
       def destroy
         @proposal.unvote_by(current_user)
 

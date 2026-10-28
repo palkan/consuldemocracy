@@ -1,3 +1,4 @@
+# typed: strict
 class Dashboard::AdministratorTask < ApplicationRecord
   belongs_to :source, polymorphic: true
   belongs_to :user
@@ -9,6 +10,7 @@ class Dashboard::AdministratorTask < ApplicationRecord
   scope :pending, -> { where(executed_at: nil) }
   scope :done, -> { where.not(executed_at: nil) }
 
+  sig { returns(String) }
   def title
     "#{source.proposal.title} #{source.action.title}"
   end

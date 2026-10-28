@@ -1,3 +1,4 @@
+# typed: true
 module Comments
   class VotesController < ApplicationController
     before_action :authenticate_user!
@@ -5,9 +6,10 @@ module Comments
     load_and_authorize_resource through: :comment, through_association: :votes_for, only: :destroy
     before_action :verify_comments_open!
 
+    sig { void }
     def create
       authorize! :create, Vote.new(voter: current_user, votable: @comment)
-      current_user.with_lock { @comment.vote_by(voter: current_user, vote: params[:value]) }
+      T.must(current_user).with_lock { @comment.vote_by(voter: current_user, vote: params[:value]) }
 
       respond_to do |format|
         format.html { redirect_to request.referer, notice: I18n.t("flash.actions.create.vote") }
@@ -15,6 +17,7 @@ module Comments
       end
     end
 
+    sig { void }
     def destroy
       @comment.unvote_by(current_user)
 
@@ -26,8 +29,9 @@ module Comments
 
     private
 
+      sig { void }
       def verify_comments_open!
-        return if current_user.administrator? || current_user.moderator?
+        return if T.must(current_user).administrator? || T.must(current_user).moderator?
 
         if @comment.commentable.respond_to?(:comments_closed?) && @comment.commentable.comments_closed?
           redirect_to polymorphic_path(@comment.commentable), alert: t("comments.comments_closed")

@@ -1,6 +1,9 @@
+# typed: strict
 class Ability
   include CanCan::Ability
+  extend T::Sig
 
+  sig { params(user: T.nilable(User)).void }
   def initialize(user)
     if user # logged-in users
       merge Abilities::Valuator.new(user) if user.valuator?

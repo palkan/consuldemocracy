@@ -1,3 +1,4 @@
+# typed: strict
 class ValuatorGroup < ApplicationRecord
   has_many :valuators
   has_many :valuator_group_assignments, dependent: :destroy, class_name: "Budget::ValuatorGroupAssignment"

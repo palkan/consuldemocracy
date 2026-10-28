@@ -1,8 +1,10 @@
+# typed: true
 class Admin::BudgetsWizard::HeadingsController < Admin::BudgetsWizard::BaseController
   include Admin::BudgetHeadingsActions
 
   before_action :load_headings, only: [:index, :create]
 
+  sig { void }
   def index
     if single_heading?
       @heading = @group.headings.first_or_initialize
@@ -13,6 +15,8 @@ class Admin::BudgetsWizard::HeadingsController < Admin::BudgetsWizard::BaseContr
 
   private
 
+    sig { override.returns(String) }
+
     def headings_index
       if single_heading?
         admin_budgets_wizard_budget_budget_phases_path(@budget, url_params)
@@ -21,9 +25,12 @@ class Admin::BudgetsWizard::HeadingsController < Admin::BudgetsWizard::BaseContr
       end
     end
 
+    sig { void }
     def load_headings
       @headings = @group.headings.order(:id)
     end
+
+    sig { override.returns(Symbol) }
 
     def new_action
       :index

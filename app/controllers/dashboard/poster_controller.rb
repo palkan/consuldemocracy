@@ -1,4 +1,6 @@
+# typed: strict
 class Dashboard::PosterController < Dashboard::BaseController
+  sig { void }
   def index
     authorize! :manage_poster, proposal
 
@@ -15,6 +17,7 @@ class Dashboard::PosterController < Dashboard::BaseController
     end
   end
 
+  sig { void }
   def new
     authorize! :manage_poster, proposal
   end

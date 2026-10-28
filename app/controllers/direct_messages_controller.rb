@@ -1,3 +1,4 @@
+# typed: true
 class DirectMessagesController < ApplicationController
   before_action :authenticate_user!
   load_and_authorize_resource :user, instance_name: :receiver
@@ -5,11 +6,13 @@ class DirectMessagesController < ApplicationController
   load_resource through: :receiver, through_association: :direct_messages_received
   authorize_resource except: :new
 
+  sig { void }
   def new
     authorize! :new, @direct_message, message: t("users.direct_messages.new.verified_only",
                                                  verify_account: helpers.link_to_verify_account)
   end
 
+  sig { void }
   def create
     @direct_message.sender = current_user
 
@@ -24,21 +27,25 @@ class DirectMessagesController < ApplicationController
     end
   end
 
+  sig { void }
   def show
   end
 
   private
 
+    sig { void }
     def check_slug
       slug = params[:user_id].split("-", 2)[1]
 
       raise ActiveRecord::RecordNotFound unless @receiver.slug == slug.to_s
     end
 
+    sig { returns(ActionController::Parameters) }
     def direct_message_params
       params.require(:direct_message).permit(allowed_params)
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def allowed_params
       [:title, :body]
     end

@@ -1,3 +1,4 @@
+# typed: strict
 class Budget
   class Phase < ApplicationRecord
     PHASE_KINDS = %w[informing accepting reviewing selecting valuating publishing_prices balloting
@@ -19,7 +20,7 @@ class Budget
 
     validates_translation :name, presence: true
     validates_translation :description, length: { maximum: ->(*) { DESCRIPTION_MAX_LENGTH }}
-    validates_translation :main_link_url, presence: true, unless: -> { main_link_text.blank? }
+    validates_translation :main_link_url, presence: true, unless: ->(record) { record.main_link_text.blank? }
     validates :budget, presence: true
     validates :kind, presence: true, uniqueness: { scope: :budget }, inclusion: { in: ->(*) { PHASE_KINDS }}
     validate :invalid_dates_range?
@@ -35,42 +36,54 @@ class Budget
       define_singleton_method(phase) { find_by(kind: phase) }
     end
 
+    sig { params(phase: String).returns(T::Array[String]) }
     def self.kind_or_later(phase)
-      PHASE_KINDS[PHASE_KINDS.index(phase)..-1]
+      T.must(PHASE_KINDS[T.must(PHASE_KINDS.index(phase))..-1])
     end
 
+    sig { returns(T.nilable(Budget::Phase)) }
     def next_enabled_phase
       next_phase&.enabled? ? next_phase : next_phase&.next_enabled_phase
     end
 
+    sig { returns(T.nilable(Budget::Phase)) }
     def prev_enabled_phase
       prev_phase&.enabled? ? prev_phase : prev_phase&.prev_enabled_phase
     end
 
+    sig { returns(T.nilable(ActiveModel::Error)) }
     def invalid_dates_range?
+      starts_at = self.starts_at
+      ends_at = self.ends_at
+
       if starts_at.present? && ends_at.present? && starts_at >= ends_at
         errors.add(:starts_at, I18n.t("budgets.phases.errors.dates_range_invalid"))
       end
     end
 
+    sig { returns(T::Boolean) }
     def valuating_or_later?
       in_phase_or_later?("valuating")
     end
 
+    sig { returns(T::Boolean) }
     def publishing_prices_or_later?
       in_phase_or_later?("publishing_prices")
     end
 
+    sig { returns(T::Boolean) }
     def balloting_or_later?
       in_phase_or_later?("balloting")
     end
 
+    sig { returns(T::Boolean) }
     def current?
-      budget.current_phase == self
+      T.must(budget).current_phase == self
     end
 
     private
 
+      sig { void }
       def adjust_date_ranges
         if enabled?
           next_enabled_phase&.update_column(:starts_at, ends_at)
@@ -80,28 +93,31 @@ class Budget
         end
       end
 
+      sig { void }
       def prev_phase_dates_valid?
-        if enabled? && starts_at.present? && prev_enabled_phase.present?
-          prev_enabled_phase.assign_attributes(ends_at: starts_at)
-          if prev_enabled_phase.invalid_dates_range?
-            phase_name = prev_enabled_phase.name
+        if enabled? && starts_at.present? && (phase = prev_enabled_phase).present?
+          phase.assign_attributes(ends_at: starts_at)
+          if phase.invalid_dates_range?
+            phase_name = phase.name
             error = I18n.t("budgets.phases.errors.prev_phase_dates_invalid", phase_name: phase_name)
             errors.add(:starts_at, error)
           end
         end
       end
 
+      sig { void }
       def next_phase_dates_valid?
-        if enabled? && ends_at.present? && next_enabled_phase.present?
-          next_enabled_phase.assign_attributes(starts_at: ends_at)
-          if next_enabled_phase.invalid_dates_range?
-            phase_name = next_enabled_phase.name
+        if enabled? && ends_at.present? && (phase = next_enabled_phase).present?
+          phase.assign_attributes(starts_at: ends_at)
+          if phase.invalid_dates_range?
+            phase_name = phase.name
             error = I18n.t("budgets.phases.errors.next_phase_dates_invalid", phase_name: phase_name)
             errors.add(:ends_at, error)
           end
         end
       end
 
+      sig { params(phase: String).returns(T::Boolean) }
       def in_phase_or_later?(phase)
         self.class.kind_or_later(phase).include?(kind)
       end

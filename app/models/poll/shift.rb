@@ -1,3 +1,4 @@
+# typed: strict
 class Poll
   class Shift < ApplicationRecord
     belongs_to :booth
@@ -16,17 +17,21 @@ class Poll
     after_create :create_officer_assignments
     before_destroy :destroy_officer_assignments
 
+    sig { returns(String) }
     def title
-      "#{I18n.t("admin.poll_shifts.#{task}")} #{officer_name} #{I18n.l(date.to_date, format: :long)}"
+      "#{I18n.t("admin.poll_shifts.#{task}")} #{officer_name} #{I18n.l(T.must(date).to_date, format: :long)}"
     end
 
+    sig { void }
     def persist_data
+      officer = T.must(self.officer)
       self.officer_name = officer.name
       self.officer_email = officer.email
     end
 
+    sig { void }
     def create_officer_assignments
-      booth.booth_assignments.order(:id).each do |booth_assignment|
+      T.must(booth).booth_assignments.order(:id).each do |booth_assignment|
         attrs = {
           officer_id: officer_id,
           date: date,
@@ -37,12 +42,14 @@ class Poll
       end
     end
 
+    sig { returns(T::Boolean) }
     def unable_to_destroy?
-      booth.booth_assignments.map(&:unable_to_destroy?).any?
+      T.must(booth).booth_assignments.map(&:unable_to_destroy?).any?
     end
 
+    sig { void }
     def destroy_officer_assignments
-      Poll::OfficerAssignment.where(booth_assignment: booth.booth_assignments,
+      Poll::OfficerAssignment.where(booth_assignment: T.must(booth).booth_assignments,
                                     officer: officer,
                                     date: date,
                                     final: recount_scrutiny?).destroy_all

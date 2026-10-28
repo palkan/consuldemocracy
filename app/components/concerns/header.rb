@@ -1,6 +1,19 @@
+# typed: strict
 module Header
   extend ActiveSupport::Concern
+  extend T::Sig
+  extend T::Helpers
 
+  abstract!
+  requires_ancestor { ApplicationComponent }
+
+  sig do
+    params(
+      before: T.nilable(String),
+      skip_section_title: T::Boolean,
+      block: T.nilable(T.proc.void)
+    ).returns(ActiveSupport::SafeBuffer)
+  end
   def header(before: nil, skip_section_title: false, &block)
     provide(:title) do
       [
@@ -23,6 +36,10 @@ module Header
 
   private
 
+    sig { abstract.returns(T.nilable(String)) }
+    def title; end
+
+    sig { returns(String) }
     def namespace
       controller_path.split("/").first
     end

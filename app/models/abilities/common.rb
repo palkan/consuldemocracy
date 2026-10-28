@@ -1,7 +1,10 @@
+# typed: strict
 module Abilities
   class Common
+    extend T::Sig
     include CanCan::Ability
 
+    sig { params(user: User).void }
     def initialize(user)
       merge Abilities::Everyone.new(user)
 

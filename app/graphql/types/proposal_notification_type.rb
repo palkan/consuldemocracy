@@ -1,3 +1,4 @@
+# typed: strict
 module Types
   class ProposalNotificationType < Types::BaseObject
     field :body, String, null: true
@@ -7,6 +8,7 @@ module Types
     field :public_created_at, String, null: true
     field :title, String, null: true
 
+    sig { returns(T.nilable(Proposal)) }
     def proposal
       Proposal.public_for_api.find_by(id: object.proposal)
     end

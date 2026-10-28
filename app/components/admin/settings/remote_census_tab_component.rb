@@ -1,14 +1,18 @@
+# typed: strict
 class Admin::Settings::RemoteCensusTabComponent < ApplicationComponent
+  sig { returns(String) }
   def tab
     "#tab-remote-census-configuration"
   end
 
+  sig { returns(T::Array[String]) }
   def general_settings
     %w[
       remote_census.general.endpoint
     ]
   end
 
+  sig { returns(T::Array[String]) }
   def request_settings
     %w[
       remote_census.request.method_name
@@ -20,6 +24,7 @@ class Admin::Settings::RemoteCensusTabComponent < ApplicationComponent
     ]
   end
 
+  sig { returns(T::Array[String]) }
   def response_settings
     %w[
       remote_census.response.date_of_birth

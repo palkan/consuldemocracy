@@ -1,9 +1,11 @@
+# typed: true
 class Mailer < ApplicationMailer
   after_action :prevent_delivery_to_users_without_email
 
   helper :text_with_links
   helper :users
 
+  sig { params(comment: Comment).void }
   def comment(comment)
     @comment = comment
     @commentable = comment.commentable
@@ -19,6 +21,7 @@ class Mailer < ApplicationMailer
     end
   end
 
+  sig { params(reply: Comment).void }
   def reply(reply)
     @email = ReplyEmail.new(reply)
     @email_to = @email.to
@@ -29,6 +32,15 @@ class Mailer < ApplicationMailer
     end
   end
 
+  sig do
+    params(
+      user: T.nilable(User),
+      recipient: T.nilable(String),
+      token: T.nilable(String),
+      document_type: T.nilable(String),
+      document_number: T.nilable(String)
+    ).void
+  end
   def email_verification(user, recipient, token, document_type, document_number)
     @user = user
     @email_to = recipient
@@ -41,10 +53,11 @@ class Mailer < ApplicationMailer
     end
   end
 
+  sig { params(direct_message: DirectMessage).void }
   def direct_message_for_receiver(direct_message)
     @direct_message = direct_message
     @receiver = @direct_message.receiver
-    @email_to = @receiver.email
+    @email_to = T.must(@receiver).email
     manage_subscriptions_token(@receiver)
 
     with_user(@receiver) do
@@ -52,16 +65,18 @@ class Mailer < ApplicationMailer
     end
   end
 
+  sig { params(direct_message: DirectMessage).void }
   def direct_message_for_sender(direct_message)
     @direct_message = direct_message
     @sender = @direct_message.sender
-    @email_to = @sender.email
+    @email_to = T.must(@sender).email
 
     with_user(@sender) do
       mail(to: @email_to, subject: t("mailers.direct_message_for_sender.subject"))
     end
   end
 
+  sig { params(user: User, notifications: T::Array[Notification]).void }
   def proposal_notification_digest(user, notifications)
     @notifications = notifications
     @email_to = user.email
@@ -73,6 +88,7 @@ class Mailer < ApplicationMailer
     end
   end
 
+  sig { params(email: String).void }
   def user_invite(email)
     @email_to = email
 
@@ -81,45 +97,50 @@ class Mailer < ApplicationMailer
     end
   end
 
+  sig { params(investment: Budget::Investment).void }
   def budget_investment_created(investment)
     @investment = investment
-    @email_to = @investment.author.email
+    @email_to = T.must(@investment.author).email
 
     with_user(@investment.author) do
       mail(to: @email_to, subject: t("mailers.budget_investment_created.subject"))
     end
   end
 
+  sig { params(investment: Budget::Investment).void }
   def budget_investment_unfeasible(investment)
     @investment = investment
     @author = investment.author
-    @email_to = @author.email
+    @email_to = T.must(@author).email
 
     with_user(@author) do
       mail(to: @email_to, subject: t("mailers.budget_investment_unfeasible.subject", code: @investment.code))
     end
   end
 
+  sig { params(investment: Budget::Investment).void }
   def budget_investment_selected(investment)
     @investment = investment
     @author = investment.author
-    @email_to = @author.email
+    @email_to = T.must(@author).email
 
     with_user(@author) do
       mail(to: @email_to, subject: t("mailers.budget_investment_selected.subject", code: @investment.code))
     end
   end
 
+  sig { params(investment: Budget::Investment).void }
   def budget_investment_unselected(investment)
     @investment = investment
     @author = investment.author
-    @email_to = @author.email
+    @email_to = T.must(@author).email
 
     with_user(@author) do
       mail(to: @email_to, subject: t("mailers.budget_investment_unselected.subject", code: @investment.code))
     end
   end
 
+  sig { params(newsletter: Newsletter, recipient_email: String).void }
   def newsletter(newsletter, recipient_email)
     @newsletter = newsletter
     @email_to = recipient_email
@@ -128,6 +149,7 @@ class Mailer < ApplicationMailer
     mail(to: @email_to, from: @newsletter.from, subject: @newsletter.subject)
   end
 
+  sig { params(comment: Comment, to: T.any(Valuator, Administrator)).void }
   def evaluation_comment(comment, to)
     @email = EvaluationCommentEmail.new(comment)
     @email_to = to
@@ -135,18 +157,21 @@ class Mailer < ApplicationMailer
     mail(to: @email_to.email, subject: @email.subject) if @email.can_be_sent?
   end
 
+  sig { params(user: T.nilable(User)).void }
   def machine_learning_error(user)
-    @email_to = user.email
+    @email_to = T.must(user).email
 
     mail(to: @email_to, subject: t("mailers.machine_learning_error.subject"))
   end
 
+  sig { params(user: T.nilable(User)).void }
   def machine_learning_success(user)
-    @email_to = user.email
+    @email_to = T.must(user).email
 
     mail(to: @email_to, subject: t("mailers.machine_learning_success.subject"))
   end
 
+  sig { params(user: User).void }
   def already_confirmed(user)
     @email_to = user.email
     @user = user
@@ -158,17 +183,21 @@ class Mailer < ApplicationMailer
 
   private
 
+    sig { params(user: T.nilable(User), "&": T.proc.returns(T.untyped)).returns(T.untyped) }
     def with_user(user, &)
-      I18n.with_locale(user.locale, &)
+      I18n.with_locale(T.must(user).locale, &)
     end
 
+    sig { void }
     def prevent_delivery_to_users_without_email
       if @email_to.blank?
         mail.perform_deliveries = false
       end
     end
 
+    sig { params(user: T.nilable(User)).void }
     def manage_subscriptions_token(user)
+      user = T.must(user)
       user.add_subscriptions_token
       @token = user.subscriptions_token
     end

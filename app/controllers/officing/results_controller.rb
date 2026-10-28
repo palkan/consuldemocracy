@@ -1,3 +1,4 @@
+# typed: true
 class Officing::ResultsController < Officing::BaseController
   before_action :load_poll
 
@@ -9,9 +10,11 @@ class Officing::ResultsController < Officing::BaseController
   before_action :build_results, only: :create
   before_action :verify_booth
 
+  sig { void }
   def new
   end
 
+  sig { void }
   def create
     @results.each(&:save!)
 
@@ -19,9 +22,10 @@ class Officing::ResultsController < Officing::BaseController
     redirect_to new_officing_poll_result_path(@poll), notice: notice
   end
 
+  sig { void }
   def index
     @booth_assignment = ::Poll::BoothAssignment.includes(:booth).find(index_params[:booth_assignment_id])
-    if current_user.poll_officer.officer_assignments.final
+    if T.must(T.must(current_user).poll_officer).officer_assignments.final
                    .where(booth_assignment_id: @booth_assignment.id).exists?
 
       @partial_results = ::Poll::PartialResult.includes(:question)
@@ -33,6 +37,7 @@ class Officing::ResultsController < Officing::BaseController
 
   private
 
+    sig { void }
     def build_results
       @results = []
 
@@ -61,6 +66,7 @@ class Officing::ResultsController < Officing::BaseController
       build_recounts
     end
 
+    sig { void }
     def build_recounts
       recount = ::Poll::Recount.find_or_initialize_by(
         booth_assignment_id: @officer_assignment.booth_assignment_id,
@@ -77,6 +83,7 @@ class Officing::ResultsController < Officing::BaseController
       @results << recount
     end
 
+    sig { params(alert: String).void }
     def go_back_to_new(alert)
       params[:d] = Date.current
       params[:oa] = results_params[:officer_assignment_id]
@@ -86,27 +93,31 @@ class Officing::ResultsController < Officing::BaseController
       render :new
     end
 
+    sig { void }
     def load_poll
       @poll = ::Poll.includes(:questions).find(params[:poll_id])
     end
 
+    sig { void }
     def load_officer_assignment
-      @officer_assignment = current_user.poll_officer
+      @officer_assignment = T.must(T.must(current_user).poll_officer)
                                         .officer_assignments
                                         .final
                                         .find_by(id: results_params[:officer_assignment_id])
     end
 
+    sig { void }
     def load_officer_assignments
       @officer_assignments = ::Poll::OfficerAssignment
                              .includes(booth_assignment: [:booth])
                              .joins(:booth_assignment)
                              .final
-                             .where(id: current_user.poll_officer.officer_assignment_ids)
+                             .where(id: T.must(T.must(current_user).poll_officer).officer_assignment_ids)
                              .where(poll_booth_assignments: { poll_id: @poll.id })
                              .where(date: Date.current)
     end
 
+    sig { void }
     def load_partial_results
       if @officer_assignments.present?
         @partial_results = ::Poll::PartialResult.where(officer_assignment_id: @officer_assignments.map(&:id))
@@ -114,14 +125,17 @@ class Officing::ResultsController < Officing::BaseController
       end
     end
 
+    sig { returns(ActionController::Parameters) }
     def results_params
       params.permit(:officer_assignment_id, :questions, :whites, :nulls, :total)
     end
 
+    sig { returns(ActionController::Parameters) }
     def index_params
       params.permit(:booth_assignment_id, :date)
     end
 
+    sig { void }
     def check_officer_assignment
       if @officer_assignment.blank?
         go_back_to_new(t("officing.results.flash.error_wrong_booth"))

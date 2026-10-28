@@ -1,3 +1,4 @@
+# typed: strict
 class ProposalNotification < ApplicationRecord
   include Graphqlable
   include Notifiable
@@ -25,12 +26,14 @@ class ProposalNotification < ApplicationRecord
 
   after_create :set_author
 
+  sig { void }
   def minimum_interval
-    return true if proposal&.notifications.blank?
+    proposal = self.proposal
+    return true if proposal.nil? || proposal.notifications.blank?
 
     interval = Setting[:proposal_notification_minimum_interval_in_days]
     minimum_interval = (Time.current - interval.to_i.days).to_datetime
-    if proposal.notifications.last.created_at > minimum_interval
+    if T.must(proposal.notifications.last).created_at > minimum_interval
       errors.add(
         :title,
         I18n.t("activerecord.errors.models.proposal_notification.attributes.minimum_interval.invalid",
@@ -39,27 +42,33 @@ class ProposalNotification < ApplicationRecord
     end
   end
 
+  sig { returns(T.nilable(Proposal)) }
   def notifiable
     proposal
   end
 
+  sig { params(moderator: User).void }
   def moderate_system_email(moderator)
     Notification.where(notifiable_type: "ProposalNotification", notifiable: self).destroy_all
     Activity.log(moderator, :hide, self)
   end
 
+  sig { returns(T::Boolean) }
   def ignore_flag
     update(ignored_at: Time.current)
   end
 
+  sig { returns(T::Boolean) }
   def ignored?
     ignored_at.present?
   end
 
+  sig { returns(T::Boolean) }
   def after_restore
     update(moderated: false)
   end
 
+  sig { returns(T::Hash[T.nilable(String), String]) }
   def searchable_values
     {
       title => "A",
@@ -67,13 +76,19 @@ class ProposalNotification < ApplicationRecord
     }
   end
 
+  sig do
+    params(terms: String)
+      .returns(T.any(ProposalNotification::PrivateRelation, ProposalNotification::PrivateAssociationRelation))
+  end
   def self.search(terms)
     pg_search(terms)
   end
 
   private
 
+    sig { void }
     def set_author
+      proposal = self.proposal
       update(author_id: proposal.author_id) if proposal
     end
 end

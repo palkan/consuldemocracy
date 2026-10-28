@@ -1,6 +1,7 @@
+# typed: strict
 module SearchDictionarySelector
-  SQL_QUERY = "SELECT cfgname FROM pg_ts_config".freeze
-  I18N_TO_DICTIONARY = {
+  SQL_QUERY = T.let("SELECT cfgname FROM pg_ts_config".freeze, String)
+  I18N_TO_DICTIONARY = T.let({
     ar: "arabic",
     ca: "catalan",
     de: "german",
@@ -27,23 +28,28 @@ module SearchDictionarySelector
     sv: "swedish",
     tr: "turkish",
     yi: "yiddish"
-  }.freeze
+  }.freeze, T::Hash[Symbol, String])
 
   class << self
+    extend T::Sig
+
+    sig { returns(T.nilable(String)) }
     def call
       find_from_i18n_default
     end
 
     private
 
+      sig { returns(T.nilable(String)) }
       def find_from_i18n_default
-        key_to_lookup = Setting.default_locale.to_s.split("-").first.to_sym
+        key_to_lookup = T.must(Setting.default_locale.to_s.split("-").first).to_sym
 
         dictionary = I18N_TO_DICTIONARY[key_to_lookup]
         dictionary ||= "simple"
         available_dictionaries.include?(dictionary) ? dictionary : available_dictionaries.first
       end
 
+      sig { returns(T::Array[String]) }
       def available_dictionaries
         result = ActiveRecord::Base.connection.execute(SQL_QUERY)
         result.to_a.map { |row| row["cfgname"] }

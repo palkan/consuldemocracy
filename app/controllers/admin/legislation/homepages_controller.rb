@@ -1,11 +1,14 @@
+# typed: true
 class Admin::Legislation::HomepagesController < Admin::Legislation::BaseController
   include Translatable
 
   load_and_authorize_resource :process, class: "Legislation::Process"
 
+  sig { void }
   def edit
   end
 
+  sig { void }
   def update
     if @process.update(process_params)
       link = legislation_process_path(@process)
@@ -18,10 +21,12 @@ class Admin::Legislation::HomepagesController < Admin::Legislation::BaseControll
 
   private
 
+    sig { returns(ActionController::Parameters) }
     def process_params
       params.require(:legislation_process).permit(allowed_params)
     end
 
+    sig { returns(T::Array[T.any(Symbol, T::Hash[Symbol, T.untyped])]) }
     def allowed_params
       [:homepage, :homepage_enabled, translation_params(::Legislation::Process)]
     end

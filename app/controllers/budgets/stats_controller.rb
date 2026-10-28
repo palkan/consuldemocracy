@@ -1,3 +1,4 @@
+# typed: true
 module Budgets
   class StatsController < ApplicationController
     include FeatureFlags
@@ -7,6 +8,7 @@ module Budgets
     before_action :load_budget
     authorize_resource :budget
 
+    sig { void }
     def show
       authorize! :read_stats, @budget
       @stats = Budget::Stats.new(@budget).tap(&:generate)
@@ -14,6 +16,7 @@ module Budgets
 
     private
 
+      sig { void }
       def load_budget
         @budget = Budget.find_by_slug_or_id! params[:budget_id]
       end

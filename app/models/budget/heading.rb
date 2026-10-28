@@ -1,3 +1,4 @@
+# typed: strict
 class Budget
   class Heading < ApplicationRecord
     OSM_DISTRICT_LEVEL_ZOOM = 12
@@ -9,11 +10,14 @@ class Budget
 
     translation_class_delegate :budget
 
-    class Translation
+    class Translation < Globalize::ActiveRecord::Translation
+      extend T::Sig
+
       validate :name_uniqueness_by_budget
 
+      sig { void }
       def name_uniqueness_by_budget
-        if budget.headings
+        if T.must(budget).headings
                  .joins(:translations)
                  .where(name: name)
                  .where.not("budget_heading_translations.budget_heading_id": budget_heading_id).any?
@@ -43,22 +47,26 @@ class Budget
 
     scope :allow_custom_content,  -> { where(allow_custom_content: true).sort_by(&:name) }
 
+    sig { returns(T::Array[Budget::Heading]) }
     def self.sort_by_name
       all.sort do |heading, other_heading|
-        [other_heading.group.name, heading.name] <=> [heading.group.name, other_heading.name]
+        [T.must(other_heading.group).name, heading.name] <=> [T.must(heading.group).name, other_heading.name]
       end
     end
 
+    sig { returns(T.nilable(String)) }
     def name_scoped_by_group
-      budget.single_group? ? name : "#{group.name}: #{name}"
+      budget.single_group? ? name : "#{T.must(group).name}: #{name}"
     end
 
+    sig { returns(T::Boolean) }
     def can_be_deleted?
       investments.empty?
     end
 
     private
 
+      sig { returns(T::Boolean) }
       def generate_slug?
         slug.nil? || budget.drafting?
       end

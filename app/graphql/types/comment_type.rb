@@ -1,3 +1,4 @@
+# typed: strict
 module Types
   class CommentType < Types::BaseObject
     field :ancestry, String, null: true

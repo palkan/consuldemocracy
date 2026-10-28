@@ -1,18 +1,23 @@
+# typed: true
 class Admin::ValuatorsController < Admin::BaseController
   load_and_authorize_resource
 
+  sig { void }
   def show
     @valuator = Valuator.find(params[:id])
   end
 
+  sig { void }
   def index
     @valuators = @valuators.page(params[:page])
   end
 
+  sig { void }
   def search
     @users = User.search(params[:search]).includes(:valuator).page(params[:page])
   end
 
+  sig { void }
   def create
     @valuator = Valuator.new(valuator_params)
     @valuator.save!
@@ -20,11 +25,13 @@ class Admin::ValuatorsController < Admin::BaseController
     redirect_to admin_valuators_path
   end
 
+  sig { void }
   def edit
     @valuator = Valuator.find(params[:id])
     @valuator_groups = ValuatorGroup.all
   end
 
+  sig { void }
   def update
     @valuator = Valuator.find(params[:id])
     if @valuator.update(valuator_params)
@@ -35,6 +42,7 @@ class Admin::ValuatorsController < Admin::BaseController
     end
   end
 
+  sig { void }
   def destroy
     @valuator.destroy!
     redirect_to admin_valuators_path
@@ -42,11 +50,13 @@ class Admin::ValuatorsController < Admin::BaseController
 
   private
 
+    sig { returns(ActionController::Parameters) }
     def valuator_params
       params[:valuator][:description] = nil if params[:valuator][:description].blank?
       params.require(:valuator).permit(allowed_params)
     end
 
+    sig { returns(T::Array[T.any(Symbol, T::Hash[Symbol, T.untyped])]) }
     def allowed_params
       [:user_id, :description, :valuator_group_id, :can_comment, :can_edit_dossier]
     end

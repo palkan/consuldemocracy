@@ -1,3 +1,4 @@
+# typed: true
 module Budgets
   class InvestmentsController < ApplicationController
     include FeatureFlags
@@ -34,6 +35,7 @@ module Budgets
 
     respond_to :html, :js
 
+    sig { void }
     def index
       @investments = investments.page(params[:page]).per(PER_PAGE).for_render
       @investment_ids = @investments.unscope(:includes).ids
@@ -42,14 +44,17 @@ module Budgets
       @remote_translation_resources = @investments
     end
 
+    sig { void }
     def new
     end
 
+    sig { void }
     def show
       @investment_ids = [@investment.id]
       @remote_translation_resources = @investment
     end
 
+    sig { void }
     def create
       @investment.author = current_user
       @investment.heading = @budget.headings.first if @budget.single_heading?
@@ -63,9 +68,11 @@ module Budgets
       end
     end
 
+    sig { void }
     def edit
     end
 
+    sig { void }
     def update
       if @investment.update(investment_params)
         redirect_to budget_investment_path(@budget, @investment),
@@ -75,26 +82,31 @@ module Budgets
       end
     end
 
+    sig { void }
     def destroy
       @investment.destroy!
       redirect_to user_path(current_user, filter: "budget_investments"),
                   notice: t("flash.actions.destroy.budget_investment")
     end
 
+    sig { void }
     def suggest
       @investments = @budget.investments.apply_filters_and_search(@budget, params, @current_filter)
     end
 
     private
 
+      sig { override.returns(T.class_of(Budget::Investment)) }
       def resource_model
         Budget::Investment
       end
 
+      sig { returns(ActionController::Parameters) }
       def investment_params
         params.require(:budget_investment).permit(allowed_params)
       end
 
+      sig { returns(T::Array[T.untyped]) }
       def allowed_params
         attributes = [:heading_id, :tag_list, :organization_name, :location,
                       :terms_of_service, :related_sdg_list,
@@ -105,11 +117,13 @@ module Budgets
         [*attributes, translation_params(Budget::Investment)]
       end
 
+      sig { void }
       def load_ballot
         query = Budget::Ballot.where(user: current_user, budget: @budget)
         @ballot = @budget.balloting? ? query.first_or_create! : query.first_or_initialize
       end
 
+      sig { void }
       def load_heading
         if params[:heading_id].present?
           @heading = @budget.headings.find_by_slug_or_id! params[:heading_id]
@@ -119,18 +133,26 @@ module Budgets
         end
       end
 
+      sig { void }
       def load_categories
         @categories = Tag.category.order(:name)
       end
 
+      sig { void }
       def load_budget
         @budget = Budget.find_by_slug_or_id! params[:budget_id]
       end
 
+      sig do
+        returns(T.any(Budget::Investment::PrivateRelation, Budget::Investment::PrivateAssociationRelation))
+      end
       def investments_with_filters
         @budget.investments.apply_filters_and_search(@budget, params, @current_filter)
       end
 
+      sig do
+        returns(T.any(Budget::Investment::PrivateRelation, Budget::Investment::PrivateAssociationRelation))
+      end
       def investments
         if @current_order == "random"
           investments_with_filters.sort_by_random(session[:random_seed])
@@ -139,6 +161,7 @@ module Budgets
         end
       end
 
+      sig { void }
       def set_default_investment_filter
         if @budget&.finished?
           params[:filter] ||= "winners"

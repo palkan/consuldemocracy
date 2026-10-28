@@ -1,3 +1,4 @@
+# typed: true
 class Admin::Legislation::BaseController < Admin::BaseController
   include FeatureFlags
 

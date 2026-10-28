@@ -1,8 +1,11 @@
+# typed: true
 class Management::EmailVerificationsController < Management::BaseController
+  sig { void }
   def new
     @email_verification = Verification::Management::Email.new(email_verification_params)
   end
 
+  sig { void }
   def create
     @email_verification = Verification::Management::Email.new(email_verification_params)
 
@@ -15,10 +18,12 @@ class Management::EmailVerificationsController < Management::BaseController
 
   private
 
+    sig { returns(ActionController::Parameters) }
     def email_verification_params
       params.require(:email_verification).permit(allowed_params)
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def allowed_params
       [:document_type, :document_number, :email]
     end

@@ -1,3 +1,4 @@
+# typed: strict
 class Report < ApplicationRecord
   KINDS = %i[results stats advanced_stats].freeze
 

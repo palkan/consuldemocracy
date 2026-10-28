@@ -1,8 +1,10 @@
+# typed: true
 class ImagesController < ApplicationController
   before_action :authenticate_user!
 
   load_and_authorize_resource
 
+  sig { void }
   def destroy
     respond_to do |format|
       format.html do

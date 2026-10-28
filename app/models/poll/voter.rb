@@ -1,3 +1,4 @@
+# typed: strict
 class Poll
   class Voter < ApplicationRecord
     VALID_ORIGINS = %w[web booth letter].freeze
@@ -23,7 +24,9 @@ class Poll
     scope :booth,  -> { where(origin: "booth") }
     scope :letter, -> { where(origin: "letter") }
 
+    sig { void }
     def set_demographic_info
+      user = self.user
       return if user.blank?
 
       self.gender  = user.gender
@@ -31,19 +34,23 @@ class Poll
       self.geozone = user.geozone
     end
 
+    sig { void }
     def set_document_info
+      user = self.user
       return if user.blank?
 
       self.document_type   = user.document_type
       self.document_number = user.document_number
     end
 
+    sig { returns(T::Boolean) }
     def skip_user_verification?
       Setting["feature.user.skip_verification"].present?
     end
 
     private
 
+      sig { void }
       def set_denormalized_booth_assignment_id
         self.booth_assignment_id ||= officer_assignment&.booth_assignment_id
       end

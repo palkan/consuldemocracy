@@ -1,3 +1,4 @@
+# typed: true
 class Admin::Poll::QuestionsController < Admin::Poll::BaseController
   include Translatable
 
@@ -5,6 +6,7 @@ class Admin::Poll::QuestionsController < Admin::Poll::BaseController
   load_resource class: "Poll::Question"
   authorize_resource except: :new
 
+  sig { void }
   def new
     proposal = Proposal.find(params[:proposal_id]) if params[:proposal_id].present?
     @question.copy_attributes_from_proposal(proposal)
@@ -14,6 +16,7 @@ class Admin::Poll::QuestionsController < Admin::Poll::BaseController
     authorize! :create, @question
   end
 
+  sig { void }
   def create
     @question.author = @question.proposal&.author || current_user
 
@@ -24,12 +27,15 @@ class Admin::Poll::QuestionsController < Admin::Poll::BaseController
     end
   end
 
+  sig { void }
   def show
   end
 
+  sig { void }
   def edit
   end
 
+  sig { void }
   def update
     if @question.update(question_params)
       redirect_to admin_question_path(@question), notice: t("flash.actions.save_changes.notice")
@@ -38,6 +44,7 @@ class Admin::Poll::QuestionsController < Admin::Poll::BaseController
     end
   end
 
+  sig { void }
   def destroy
     @question.destroy!
     redirect_to admin_poll_path(@question.poll), notice: t("admin.questions.destroy.notice")
@@ -45,10 +52,12 @@ class Admin::Poll::QuestionsController < Admin::Poll::BaseController
 
   private
 
+    sig { returns(ActionController::Parameters) }
     def question_params
       params.require(:poll_question).permit(allowed_params)
     end
 
+    sig { returns(T::Array[T.any(Symbol, T::Hash[Symbol, T.untyped])]) }
     def allowed_params
       attributes = [:poll_id, :question, :proposal_id, votation_type_attributes: [:vote_type, :max_votes]]
       [*attributes, translation_params(Poll::Question)]

@@ -1,17 +1,21 @@
+# typed: true
 class Admin::HiddenProposalNotificationsController < Admin::BaseController
   include Admin::HiddenContent
 
   before_action :load_proposal, only: [:confirm_hide, :restore]
 
+  sig { void }
   def index
     @proposal_notifications = hidden_content(ProposalNotification.all)
   end
 
+  sig { void }
   def confirm_hide
     @proposal_notification.confirm_hide
     redirect_with_query_params_to(action: :index)
   end
 
+  sig { void }
   def restore
     @proposal_notification.restore
     @proposal_notification.ignore_flag
@@ -21,6 +25,7 @@ class Admin::HiddenProposalNotificationsController < Admin::BaseController
 
   private
 
+    sig { void }
     def load_proposal
       @proposal_notification = ProposalNotification.with_hidden.find(params[:id])
     end

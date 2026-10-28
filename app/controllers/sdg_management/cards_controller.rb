@@ -1,3 +1,4 @@
+# typed: strict
 class SDGManagement::CardsController < SDGManagement::BaseController
   include Admin::Widget::CardsActions
 
@@ -8,6 +9,7 @@ class SDGManagement::CardsController < SDGManagement::BaseController
 
   private
 
+    sig { override.returns(String) }
     def index_path
       sdg_management_homepage_path
     end

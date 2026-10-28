@@ -1,3 +1,4 @@
+# typed: strict
 class Moderator < ApplicationRecord
   belongs_to :user, touch: true
   delegate :name, :email, to: :user

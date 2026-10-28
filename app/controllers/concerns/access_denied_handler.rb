@@ -1,5 +1,10 @@
+# typed: strict
 module AccessDeniedHandler
   extend ActiveSupport::Concern
+  extend T::Helpers
+  extend T::Sig
+
+  requires_ancestor { ActionController::Base }
 
   included do
     rescue_from CanCan::AccessDenied do |exception|

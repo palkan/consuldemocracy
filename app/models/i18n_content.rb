@@ -1,3 +1,4 @@
+# typed: strict
 class I18nContent < ApplicationRecord
   validates :key, uniqueness: true
 
@@ -36,6 +37,10 @@ class I18nContent < ApplicationRecord
   #   'string.key2.key4.key5' => 'value3'
   # }
 
+  sig do
+    params(input: T.untyped, path: T.nilable(String), output: T.untyped)
+      .returns(T::Hash[T.nilable(String), T.untyped])
+  end
   def self.flat_hash(input, path = nil, output = {})
     return output.update({ path => input }) unless input.is_a? Hash
 
@@ -43,12 +48,14 @@ class I18nContent < ApplicationRecord
     output
   end
 
+  sig { params(tab: T.nilable(T.any(String, Symbol))).returns(T::Array[I18nContent]) }
   def self.content_for(tab)
     translations_for(tab).map do |string|
       I18nContent.find_or_initialize_by(key: string)
     end
   end
 
+  sig { params(tab: T.nilable(T.any(String, Symbol))).returns(T::Array[T.nilable(String)]) }
   def self.translations_for(tab)
     if tab.to_s == "basic"
       basic_translations
@@ -59,6 +66,7 @@ class I18nContent < ApplicationRecord
     end
   end
 
+  sig { params(tab: T.nilable(T.any(String, Symbol))).returns(T::Hash[Symbol, T.untyped]) }
   def self.translations_hash_for(tab)
     I18n.backend.send(:init_translations) unless I18n.backend.initialized?
 
@@ -67,6 +75,7 @@ class I18nContent < ApplicationRecord
     end
   end
 
+  sig { returns(T::Array[String]) }
   def self.basic_translations
     %w[
       debates.index.section_footer.title
@@ -97,6 +106,7 @@ class I18nContent < ApplicationRecord
     ]
   end
 
+  sig { returns(T::Array[String]) }
   def self.machine_learning_translations
     %w[
       admin.machine_learning.title
@@ -111,6 +121,7 @@ class I18nContent < ApplicationRecord
     ]
   end
 
+  sig { params(locale: T.any(String, Symbol)).returns(T::Hash[T.nilable(String), T.nilable(String)]) }
   def self.translations_hash(locale)
     Rails.cache.fetch(translation_class.where(locale: locale)) do
       all.to_h do |content|
@@ -119,6 +130,11 @@ class I18nContent < ApplicationRecord
     end
   end
 
+  # Not checked at runtime: sorbet-runtime can't process the signature of the
+  # ActiveRecord method this one overrides
+  T::Sig::WithoutRuntime.sig do
+    params(contents: T::Array[T.untyped], enabled_translations: T::Array[T.any(String, Symbol)]).void
+  end
   def self.update(contents, enabled_translations = Setting.enabled_locales)
     contents.each do |content|
       values = content[:values].slice(*translation_params(enabled_translations))
@@ -144,6 +160,7 @@ class I18nContent < ApplicationRecord
     end
   end
 
+  sig { params(enabled_translations: T::Array[T.any(String, Symbol)]).returns(T::Array[String]) }
   def self.translation_params(enabled_translations)
     translated_attribute_names.product(enabled_translations).map do |attr_name, loc|
       localized_attr_name_for(attr_name, loc)

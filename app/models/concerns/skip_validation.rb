@@ -1,7 +1,14 @@
+# typed: strict
 module SkipValidation
   extend ActiveSupport::Concern
 
   module ClassMethods
+    extend T::Helpers
+    extend T::Sig
+
+    requires_ancestor { T.class_of(ActiveRecord::Base) }
+
+    sig { params(field: Symbol, validator: T.any(T::Class[ActiveModel::Validator], Symbol, String)).void }
     def skip_validation(field, validator)
       validator_class = if validator.is_a?(Class)
                           validator
@@ -18,9 +25,10 @@ module SkipValidation
       end
     end
 
+    sig { params(field: Symbol, validator: T.any(T::Class[ActiveModel::Validator], Symbol, String)).void }
     def skip_translation_validation(field, validator)
       skip_validation(field, validator)
-      translation_class.skip_validation(field, validator)
+      T.cast(self, Globalize::ActiveRecord::ClassMethods).translation_class.skip_validation(field, validator)
     end
   end
 end

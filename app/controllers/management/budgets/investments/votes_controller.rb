@@ -1,8 +1,10 @@
+# typed: true
 class Management::Budgets::Investments::VotesController < Management::BaseController
   load_resource :budget, find_by: :slug_or_id
   load_resource :investment, through: :budget, class: "Budget::Investment"
   load_and_authorize_resource through: :investment, through_association: :votes_for, only: :destroy
 
+  sig { void }
   def create
     @investment.register_selection(managed_user)
 
@@ -16,6 +18,7 @@ class Management::Budgets::Investments::VotesController < Management::BaseContro
     end
   end
 
+  sig { void }
   def destroy
     @investment.unliked_by(managed_user)
 

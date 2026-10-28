@@ -1,7 +1,10 @@
+# typed: true
 class Management::UserInvitesController < Management::BaseController
+  sig { void }
   def new
   end
 
+  sig { void }
   def create
     @emails = params[:emails].split(",").map(&:strip)
     @emails.each do |email|

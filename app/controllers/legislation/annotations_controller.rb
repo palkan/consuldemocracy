@@ -1,3 +1,4 @@
+# typed: true
 class Legislation::AnnotationsController < Legislation::BaseController
   skip_before_action :verify_authenticity_token
 
@@ -10,9 +11,11 @@ class Legislation::AnnotationsController < Legislation::BaseController
 
   has_orders %w[most_voted newest oldest], only: :show
 
+  sig { void }
   def index
   end
 
+  sig { void }
   def show
     if params[:sub_annotation_ids].present?
       @sub_annotations = Legislation::Annotation.where(id: params[:sub_annotation_ids].split(","))
@@ -24,6 +27,7 @@ class Legislation::AnnotationsController < Legislation::BaseController
     @comment_tree = MergedCommentTree.new(annotations, params[:page], @current_order)
   end
 
+  sig { void }
   def create
     if !@process.allegations_phase.open? || @draft_version.final_version?
       render(json: {}, status: :not_found) && return
@@ -55,23 +59,27 @@ class Legislation::AnnotationsController < Legislation::BaseController
     end
   end
 
+  sig { void }
   def search
     @annotations = @annotations.order(Arel.sql("LENGTH(quote) DESC"))
     annotations_hash = { total: @annotations.size, rows: @annotations }
     render json: annotations_hash.to_json(methods: :weight)
   end
 
+  sig { void }
   def comments
     @annotation = @annotations.find(params[:annotation_id])
     @comment = @annotation.comments.new
   end
 
+  sig { void }
   def new
     respond_to do |format|
       format.js
     end
   end
 
+  sig { void }
   def new_comment
     @annotation = @annotations.find(params[:annotation_id])
     @comment = @annotation.comments.new(body: params[:comment][:body], user: current_user)
@@ -86,16 +94,19 @@ class Legislation::AnnotationsController < Legislation::BaseController
 
   private
 
+    sig { returns(ActionController::Parameters) }
     def annotation_params
       params
         .require(:legislation_annotation)
         .permit(allowed_params)
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def allowed_params
       [:quote, :text, ranges: [:start, :startOffset, :end, :endOffset]]
     end
 
+    sig { void }
     def convert_ranges_parameters
       annotation = params[:legislation_annotation]
       if annotation && annotation[:ranges].is_a?(String)

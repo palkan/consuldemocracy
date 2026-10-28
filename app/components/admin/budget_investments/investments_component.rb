@@ -1,7 +1,14 @@
+# typed: strict
 class Admin::BudgetInvestments::InvestmentsComponent < ApplicationComponent
-  attr_reader :budget, :investments
+  sig { returns(Budget) }
+  attr_reader :budget
+
+  sig { returns(T.untyped) }
+  attr_reader :investments
+
   delegate :set_direction, :set_sorting_icon, to: :helpers
 
+  sig { params(budget: Budget, investments: T.untyped).void }
   def initialize(budget, investments)
     @budget = budget
     @investments = investments
@@ -9,6 +16,7 @@ class Admin::BudgetInvestments::InvestmentsComponent < ApplicationComponent
 
   private
 
+    sig { returns(T::Hash[Symbol, T.untyped]) }
     def csv_params
       csv_params = params.clone.merge(format: :csv)
       csv_params = csv_params.to_unsafe_h.transform_keys(&:to_sym)
@@ -16,6 +24,7 @@ class Admin::BudgetInvestments::InvestmentsComponent < ApplicationComponent
       csv_params
     end
 
+    sig { params(column: Symbol).returns(ActiveSupport::SafeBuffer) }
     def link_to_investments_sorted_by(column)
       direction = set_direction(params[:direction])
       icon = set_sorting_icon(direction, column)

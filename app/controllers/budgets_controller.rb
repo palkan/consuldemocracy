@@ -1,6 +1,6 @@
+# typed: true
 class BudgetsController < ApplicationController
   include FeatureFlags
-  include BudgetsHelper
 
   feature_flag :budgets
 
@@ -10,20 +10,24 @@ class BudgetsController < ApplicationController
 
   respond_to :html, :js
 
+  sig { void }
   def show
-    raise ActionController::RoutingError, "Not Found" unless budget_published?(@budget)
+    raise ActionController::RoutingError, "Not Found" unless helpers.budget_published?(@budget)
   end
 
+  sig { void }
   def index
     @finished_budgets = @budgets.finished.order(created_at: :desc)
   end
 
   private
 
+    sig { void }
     def load_budget
       @budget = Budget.find_by_slug_or_id! params[:id]
     end
 
+    sig { void }
     def load_current_budget
       @budget = current_budget
     end

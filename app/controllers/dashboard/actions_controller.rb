@@ -1,11 +1,14 @@
+# typed: true
 class Dashboard::ActionsController < Dashboard::BaseController
   helper_method :dashboard_action
 
+  sig { void }
   def new_request
     authorize! :dashboard, proposal
     @dashboard_executed_action = Dashboard::ExecutedAction.new
   end
 
+  sig { void }
   def create_request
     authorize! :dashboard, proposal
 
@@ -27,6 +30,7 @@ class Dashboard::ActionsController < Dashboard::BaseController
     end
   end
 
+  sig { void }
   def execute
     authorize! :dashboard, proposal
 
@@ -36,16 +40,18 @@ class Dashboard::ActionsController < Dashboard::BaseController
     redirect_to request.referer
   end
 
+  sig { void }
   def unexecute
     authorize! :dashboard, proposal
 
-    Dashboard::ExecutedAction.find_by(proposal: proposal, action: dashboard_action).destroy!
+    T.must(Dashboard::ExecutedAction.find_by(proposal: proposal, action: dashboard_action)).destroy!
 
     redirect_to request.referer
   end
 
   private
 
+    sig { returns(Dashboard::Action) }
     def dashboard_action
       @dashboard_action ||= Dashboard::Action.find(params[:id])
     end

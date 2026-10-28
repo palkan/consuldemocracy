@@ -58,6 +58,7 @@ gem "sassc-rails", "~> 2.1.2"
 gem "savon", "~> 2.17.2"
 gem "sitemap_generator", "~> 7.1.1"
 gem "social-share-button", "~> 1.2.4"
+gem "sorbet-runtime", "~> 0.6.13599"
 gem "sprockets", "~> 4.4.1"
 gem "sprockets-rails", "~> 3.5.2", require: "sprockets/railtie"
 gem "terser", "~> 1.2.7"
@@ -76,6 +77,8 @@ group :development, :test do
   gem "knapsack_pro", "~> 8.4.0"
   gem "launchy", "~> 3.1.1"
   gem "letter_opener_web", "~> 3.0.0"
+  gem "sorbet", "~> 0.6.13599", require: false
+  gem "tapioca", "~> 0.20.0", require: false
 end
 
 group :test do

@@ -1,3 +1,4 @@
+# typed: true
 class PollsController < ApplicationController
   include FeatureFlags
 
@@ -11,16 +12,19 @@ class PollsController < ApplicationController
   has_filters %w[current expired]
   has_orders %w[most_voted newest oldest], only: [:show, :answer]
 
+  sig { void }
   def index
     @polls = Kaminari.paginate_array(
       @polls.created_by_admin.not_budget.send(@current_filter).includes(:geozones).sort_for_list(current_user)
     ).page(params[:page])
   end
 
+  sig { void }
   def show
     @web_vote = Poll::WebVote.new(@poll, current_user)
   end
 
+  sig { void }
   def answer
     raise CanCan::AccessDenied if @poll.voted_in_booth?(current_user)
 
@@ -37,23 +41,28 @@ class PollsController < ApplicationController
     end
   end
 
+  sig { void }
   def stats
     @stats = Poll::Stats.new(@poll).tap(&:generate)
   end
 
+  sig { void }
   def results
   end
 
   private
 
+    sig { void }
     def load_poll
       @poll = Poll.find_by_slug_or_id!(params[:id])
     end
 
+    sig { void }
     def load_active_poll
       @active_poll = ActivePoll.first
     end
 
+    sig { returns(T.untyped) }
     def answer_params
       params[:web_vote] || {}
     end

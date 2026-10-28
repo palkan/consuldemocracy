@@ -1,21 +1,30 @@
+# typed: strict
 class Shared::LinkListComponent < ApplicationComponent
-  attr_reader :links, :options
+  sig { returns(T::Array[T.untyped]) }
+  attr_reader :links
 
+  sig { returns(T::Hash[Symbol, T.untyped]) }
+  attr_reader :options
+
+  sig { params(links: T.untyped, options: T.untyped).void }
   def initialize(*links, **options)
     @links = links
     @options = options
   end
 
+  sig { returns(T::Boolean) }
   def render?
     present_links.any?
   end
 
   private
 
+    sig { returns(T::Array[T.untyped]) }
     def present_links
       links.compact_blank
     end
 
+    sig { returns(T::Array[ActiveSupport::SafeBuffer]) }
     def list_items
       present_links.map do |text, url, current_or_options = false, options = {}|
         if current_or_options.is_a?(Hash)

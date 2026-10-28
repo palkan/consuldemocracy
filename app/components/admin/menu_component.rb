@@ -1,6 +1,8 @@
+# typed: strict
 class Admin::MenuComponent < ApplicationComponent
   delegate :link_list, to: :helpers
 
+  sig { returns(T::Array[T.untyped]) }
   def links
     if Rails.application.multitenancy_management_mode?
       multitenancy_management_links
@@ -11,6 +13,7 @@ class Admin::MenuComponent < ApplicationComponent
 
   private
 
+    sig { returns(T::Array[T.untyped]) }
     def default_links
       [
         (proposals_link if feature?(:proposals)),
@@ -32,43 +35,52 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def multitenancy_management_links
       [tenants_link, administrators_link]
     end
 
+    sig { returns(T::Boolean) }
     def moderated_content?
       moderated_sections.include?(controller_name) && controller.class.module_parent != Admin::Legislation
     end
 
+    sig { returns(T::Array[String]) }
     def moderated_sections
       ["hidden_proposals", "hidden_debates", "hidden_comments", "hidden_users", "activity",
        "hidden_budget_investments", "hidden_proposal_notifications"]
     end
 
+    sig { returns(T::Boolean) }
     def budgets?
-      controller_name.starts_with?("budget") || controller_path =~ /budgets_wizard/
+      controller_name.starts_with?("budget") || controller_path.match?(/budgets_wizard/)
     end
 
+    sig { returns(T::Boolean) }
     def polls?
       controller.class.module_parent == Admin::Poll::Questions::Options ||
         %w[polls active_polls recounts results questions options].include?(controller_name) &&
           action_name != "booth_assignments"
     end
 
+    sig { returns(T::Boolean) }
     def booths?
       %w[officers booths shifts booth_assignments officer_assignments].include?(controller_name) ||
         controller_name == "polls" && action_name == "booth_assignments"
     end
 
+    sig { returns(T::Boolean) }
     def profiles?
       %w[administrators organizations officials moderators valuators managers users].include?(controller_name)
     end
 
+    sig { returns(T::Boolean) }
     def settings?
       controllers_names = %w[settings tenants tags locales geozones local_census_records imports]
       controllers_names.include?(controller_name)
     end
 
+    sig { returns(T::Boolean) }
     def customization?
       controllers_names = ["pages", "banners", "information_texts", "documents", "images", "content_blocks"]
 
@@ -76,39 +88,48 @@ class Admin::MenuComponent < ApplicationComponent
         controller.class.module_parent != Admin::Poll::Questions::Options
     end
 
+    sig { returns(T::Boolean) }
     def homepage?
       ["homepage", "cards"].include?(controller_name) && params[:page_id].nil?
     end
 
+    sig { returns(T::Boolean) }
     def pages?
       ["pages", "cards"].include?(controller_name) && params[:page_id].present?
     end
 
+    sig { returns(T::Boolean) }
     def dashboard?
       ["actions", "administrator_tasks"].include?(controller_name)
     end
 
+    sig { returns(T::Boolean) }
     def local_census_records?
       controller_name == "local_census_records" ||
         (controller_name == "imports" && controller.class.module_parent == Admin::LocalCensusRecords)
     end
 
+    sig { returns(T::Boolean) }
     def messages_menu_active?
       messages_sections.include?(controller_name)
     end
 
+    sig { returns(T::Array[String]) }
     def messages_sections
       %w[newsletters emails_download admin_notifications system_emails]
     end
 
+    sig { returns(T::Boolean) }
     def sdg_managers?
       controller_name == "managers" && controller.class.module_parent == Admin::SDG
     end
 
+    sig { returns(T::Boolean) }
     def managers?
       controller_name == "managers" && controller.class.module_parent == Admin
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def proposals_link
       [
         t("admin.menu.proposals"),
@@ -118,6 +139,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def debates_link
       [
         t("admin.menu.debates"),
@@ -127,6 +149,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def polls_link
       [
         t("admin.menu.polls"),
@@ -136,6 +159,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def comments_link
       [
         t("admin.menu.comments"),
@@ -145,6 +169,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def legislation_link
       [
         t("admin.menu.legislation"),
@@ -154,6 +179,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def budgets_link
       [
         t("admin.menu.budgets"),
@@ -163,6 +189,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(ActiveSupport::SafeBuffer) }
     def booths_links
       section(t("admin.menu.title_booths"), active: booths?, class: "booths-link") do
         link_list(
@@ -175,6 +202,7 @@ class Admin::MenuComponent < ApplicationComponent
       end
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def officers_link
       [
         t("admin.menu.poll_officers"),
@@ -183,6 +211,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def booths_link
       [
         t("admin.menu.poll_booths"),
@@ -191,6 +220,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def booth_assignments_link
       [
         t("admin.menu.poll_booth_assignments"),
@@ -200,6 +230,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def shifts_link
       [
         t("admin.menu.poll_shifts"),
@@ -208,6 +239,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def signature_sheets_link
       [
         t("admin.menu.signature_sheets"),
@@ -217,6 +249,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(ActiveSupport::SafeBuffer) }
     def messages_links
       section(t("admin.menu.messaging_users"), active: messages_menu_active?, class: "messages-link") do
         link_list(
@@ -229,6 +262,7 @@ class Admin::MenuComponent < ApplicationComponent
       end
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def newsletters_link
       [
         t("admin.menu.newsletters"),
@@ -237,6 +271,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def admin_notifications_link
       [
         t("admin.menu.admin_notifications"),
@@ -245,6 +280,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def system_emails_link
       [
         t("admin.menu.system_emails"),
@@ -253,6 +289,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def emails_download_link
       [
         t("admin.menu.emails_download"),
@@ -261,6 +298,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(ActiveSupport::SafeBuffer) }
     def site_customization_links
       section(t("admin.menu.title_site_customization"),
               active: customization?, class: "site-customization-link") do
@@ -276,6 +314,7 @@ class Admin::MenuComponent < ApplicationComponent
       end
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def homepage_link
       [
         t("admin.menu.site_customization.homepage"),
@@ -284,6 +323,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def pages_link
       [
         t("admin.menu.site_customization.pages"),
@@ -292,6 +332,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def banners_link
       [
         t("admin.menu.banner"),
@@ -300,6 +341,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def information_texts_link
       [
         t("admin.menu.site_customization.information_texts"),
@@ -308,6 +350,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def documents_link
       [
         t("admin.menu.site_customization.documents"),
@@ -316,6 +359,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(ActiveSupport::SafeBuffer) }
     def moderated_content_links
       section(t("admin.menu.title_moderated_content"),
               active: moderated_content?, class: "moderated-content-link") do
@@ -331,6 +375,7 @@ class Admin::MenuComponent < ApplicationComponent
       end
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def hidden_proposals_link
       [
         t("admin.menu.hidden_proposals"),
@@ -339,6 +384,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def hidden_debates_link
       [
         t("admin.menu.hidden_debates"),
@@ -347,6 +393,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def hidden_budget_investments_link
       [
         t("admin.menu.hidden_budget_investments"),
@@ -355,6 +402,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def hidden_comments_link
       [
         t("admin.menu.hidden_comments"),
@@ -363,6 +411,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def hidden_proposal_notifications_link
       [
         t("admin.menu.hidden_proposal_notifications"),
@@ -371,6 +420,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def hidden_users_link
       [
         t("admin.menu.hidden_users"),
@@ -379,6 +429,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def activity_link
       [
         t("admin.menu.activity"),
@@ -387,6 +438,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(ActiveSupport::SafeBuffer) }
     def profiles_links
       section(t("admin.menu.title_profiles"), active: profiles?, class: "profiles-link") do
         link_list(
@@ -402,6 +454,7 @@ class Admin::MenuComponent < ApplicationComponent
       end
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def administrators_link
       [
         t("admin.menu.administrators"),
@@ -411,6 +464,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def organizations_link
       [
         t("admin.menu.organizations"),
@@ -419,6 +473,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def officials_link
       [
         t("admin.menu.officials"),
@@ -427,6 +482,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def moderators_link
       [
         t("admin.menu.moderators"),
@@ -435,6 +491,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def valuators_link
       [
         t("admin.menu.valuators"),
@@ -443,6 +500,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def managers_link
       [
         t("admin.menu.managers"),
@@ -451,6 +509,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def users_link
       [
         t("admin.menu.users"),
@@ -459,6 +518,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def stats_link
       [
         t("admin.menu.stats"),
@@ -468,6 +528,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(ActiveSupport::SafeBuffer) }
     def settings_links
       section(t("admin.menu.title_settings"), active: settings?, class: "settings-link") do
         link_list(
@@ -481,6 +542,7 @@ class Admin::MenuComponent < ApplicationComponent
       end
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def settings_link
       [
         t("admin.menu.settings"),
@@ -489,6 +551,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T.nilable(T::Array[T.untyped])) }
     def tenants_link
       if can?(:read, Tenant)
         [
@@ -500,6 +563,7 @@ class Admin::MenuComponent < ApplicationComponent
       end
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def tags_link
       [
         t("admin.menu.proposals_topics"),
@@ -508,6 +572,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def locales_link
       [
         t("admin.menu.locales"),
@@ -516,6 +581,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def geozones_link
       [
         t("admin.menu.geozones"),
@@ -524,6 +590,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def images_link
       [
         t("admin.menu.site_customization.images"),
@@ -532,6 +599,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def content_blocks_link
       [
         t("admin.menu.site_customization.content_blocks"),
@@ -540,6 +608,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def local_census_records_link
       [
         t("admin.menu.local_census_records"),
@@ -548,6 +617,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(ActiveSupport::SafeBuffer) }
     def dashboard_links
       section(t("admin.menu.dashboard"), active: dashboard?, class: "dashboard-link") do
         link_list(
@@ -557,6 +627,7 @@ class Admin::MenuComponent < ApplicationComponent
       end
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def machine_learning_link
       [
         t("admin.menu.machine_learning"),
@@ -566,6 +637,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def administrator_tasks_link
       [
         t("admin.menu.administrator_tasks"),
@@ -574,6 +646,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def dashboard_actions_link
       [
         t("admin.menu.dashboard_actions"),
@@ -582,6 +655,7 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig { returns(T::Array[T.untyped]) }
     def sdg_managers_link
       [
         t("admin.menu.sdg_managers"),
@@ -590,10 +664,15 @@ class Admin::MenuComponent < ApplicationComponent
       ]
     end
 
+    sig do
+      params(title: String, "**": T.untyped, content: T.proc.returns(T.untyped))
+        .returns(ActiveSupport::SafeBuffer)
+    end
     def section(title, **, &content)
       section_opener(title, **) + content.call
     end
 
+    sig { params(title: String, active: T::Boolean, options: T.untyped).returns(ActiveSupport::SafeBuffer) }
     def section_opener(title, active:, **options)
       button_tag(title, { type: "button", disabled: "disabled", "aria-expanded": active }.merge(options))
     end
